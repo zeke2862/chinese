@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <script src="../gate-nav.js" data-pos="bl" data-name="生字射擊"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TypeStrike — 國字拼音打字射擊遊戲</title>
+  <meta name="description" content="TypeStrike — 國字拼音打字射擊遊戲。選擇冊別與課文，摧毀敵艦，練習生字與拼音！" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-left">
+      <div class="hud-label">SCORE</div>
+      <div class="hud-value" id="scoreDisplay">0</div>
+    </div>
+    <div class="hud-center">
+      <div class="hud-label">WAVE</div>
+      <div class="hud-value" id="waveDisplay">1</div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-label">LIVES</div>
+      <div id="livesDisplay" class="lives-icons"></div>
+      <button id="fullscreenBtn" class="fullscreen-btn" title="切換全螢幕 (F11)">⛶ 全螢幕</button>
+    </div>
+  </div>
+
+  <!-- 選字作答面板（一般模式：看拼音選國字／專家模式：看國字選拼音） -->
+  <div id="answerPanel" class="answer-panel" style="display:none;">
+    <div class="answer-hint" id="answerHint">請選出正確答案</div>
+    <div class="answer-choices" id="answerChoices"></div>
+  </div>
+
+  <!-- ═══════════ Screens ═══════════ -->
+
+  <!-- 1. Start / Mode Select -->
+  <div id="startScreen" class="screen active">
+    <div class="screen-content">
+      <div class="logo-glow">TYPE<span class="accent">STRIKE</span></div>
+      <p class="tagline">看拼音／看國字，選出正確答案，射擊消滅敵艦！</p>
+      <div class="key-hint" id="playerHi"></div>
+      <div class="key-hint">選擇模式，再挑選要練習的冊別與課文</div>
+      <div class="mode-select">
+        <button class="mode-btn active" data-mode="normal">看拼音選國字</button>
+        <button class="mode-btn" data-mode="expert">看國字選拼音</button>
+      </div>
+      <button class="start-btn" id="toCategories">選擇練習範圍 →</button>
+      <button class="link-btn" id="zoneBtn">🎮 遊戲區（解鎖的小遊戲）</button>
+      <div class="controls-hint">
+        <span>🖱️ 點選按鈕作答</span>
+        <span>ESC 暫停</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Book / Lesson Select -->
+  <div id="categoryScreen" class="screen">
+    <div class="screen-content screen-content-wide">
+      <div class="screen-title">選擇練習範圍</div>
+
+      <div class="range-mode-select" id="rangeModeSelect">
+        <button class="range-btn active" data-range-mode="single">📖 單冊模式</button>
+        <button class="range-btn" data-range-mode="combined">🧩 綜合關卡（跨冊）</button>
+        <button class="range-btn" data-range-mode="wrong">⚠️ 常錯題目關卡</button>
+      </div>
+
+      <!-- 單冊模式：選一冊，再選該冊要練習的課文 -->
+      <div id="singleRangeWrap">
+        <p class="category-hint" id="singleHint">請先點選冊別，再挑選要練習的課文</p>
+        <div class="category-grid" id="bookGrid"></div>
+
+        <div id="lessonPanel" class="chinese-panel" style="display:none;">
+          <div class="chinese-panel-head">
+            <span class="chinese-panel-title" id="lessonPanelTitle">選擇要練習的課文（可複選）</span>
+            <div class="chinese-panel-actions">
+              <button class="mini-btn" id="backToBooks">← 換一冊</button>
+              <button class="mini-btn" id="selectAllLessons">全選</button>
+              <button class="mini-btn" id="selectNoneLessons">取消全選</button>
+            </div>
+          </div>
+          <div id="lessonList" class="article-list"></div>
+        </div>
+      </div>
+
+      <!-- 綜合關卡：直接複選多個冊別（可跨年級混合練習） -->
+      <div id="combinedRangeWrap" class="chinese-panel" style="display:none;">
+        <div class="chinese-panel-head">
+          <span class="chinese-panel-title">勾選要混合練習的冊別（可複選多個年級一起練習）</span>
+          <div class="chinese-panel-actions">
+            <button class="mini-btn" id="selectAllBooks">全選</button>
+            <button class="mini-btn" id="selectNoneBooks">取消全選</button>
+          </div>
+        </div>
+        <div class="category-grid" id="combinedBookGrid"></div>
+      </div>
+
+      <!-- 常錯題目關卡：依照過去答錯次數加權出題，錯越多次出現機率越高 -->
+      <div id="wrongRangeWrap" class="chinese-panel" style="display:none;">
+        <div class="chinese-panel-head">
+          <span class="chinese-panel-title" id="wrongPanelTitle">常錯題目關卡：越常答錯的字/詞，出現機率越高</span>
+          <div class="chinese-panel-actions">
+            <button class="mini-btn" id="clearWrongHistory">清除錯題記錄</button>
+          </div>
+        </div>
+        <div id="wrongList" class="review-list"></div>
+      </div>
+
+      <div class="cat-actions">
+        <button class="link-btn" id="backToMode">← 返回</button>
+        <button class="start-btn" id="startGameBtn">開始遊戲</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Wrong-Answer Review (shown before final results) -->
+  <div id="reviewScreen" class="screen">
+    <div class="screen-content screen-content-wide">
+      <div class="screen-title">📋 錯題複習</div>
+      <p class="category-hint">先看看剛剛答錯（或被敵艦撞到）的題目，記住正確答案吧！</p>
+      <div id="reviewList" class="review-list"></div>
+      <button class="start-btn" id="toResultsBtn">查看遊戲成果 →</button>
+    </div>
+  </div>
+
+  <!-- 4. Pause -->
+  <div id="pauseScreen" class="screen">
+    <div class="screen-content">
+      <div class="screen-title">⏸ 暫停</div>
+      <button class="start-btn" id="resumeBtn">繼續遊戲</button>
+      <button class="link-btn" id="pauseMenuBtn">🏠 回主選單</button>
+    </div>
+  </div>
+
+  <!-- 5. Game Over -->
+  <div id="gameoverScreen" class="screen">
+    <div class="screen-content">
+      <div class="screen-title gameover-title">GAME OVER</div>
+      <div class="final-stats">
+        <div class="key-hint" id="overHi" style="margin-bottom:6px"></div>
+        <div class="stat-row"><span>測驗內容</span><span id="finalRange">—</span></div>
+        <div class="stat-row"><span>最終分數</span><span id="finalScore">0</span></div>
+        <div class="stat-row"><span>最高波次</span><span id="finalWave">0</span></div>
+        <div class="stat-row"><span>擊毀敵艦</span><span id="finalKills">0</span></div>
+        <div class="stat-row"><span>作答正確率</span><span id="finalAccuracy">0%</span></div>
+        <div class="stat-row"><span>遊戲時長</span><span id="finalDuration">0 分 00 秒</span></div>
+        <div class="stat-row"><span>結束時間</span><span id="finalEndTime">—</span></div>
+      </div>
+      <button class="start-btn" id="restartBtn">再玩一次</button>
+      <button class="link-btn" id="overMenuBtn">🏠 回主選單</button>
+    </div>
+  </div>
+
+  <script src="character-books-data.js"></script>
+  <script src="relax-break.bundle.js"></script>
+  <script src="game.js">
+// 1. 禁用滑鼠右鍵選單
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// 2. 禁用 Ctrl+S / Cmd+S 另存網頁快捷鍵
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        alert('本網站已啟用內容保護，暫不開放另存網頁。');
+    }
+    // 順便禁用 Ctrl+U (查看原始碼) 和 F12 (開發者工具)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'u' || e.key === 'F12') {
+        e.preventDefault();
+    }
+});
+</script>
+</body>
+</html>

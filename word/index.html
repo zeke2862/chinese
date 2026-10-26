@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-TW"><head>
+<script src="../gate-nav.js" data-pos="bl" data-name="生詞大挑戰"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>生詞大挑戰｜簡單版・進階版</title>
+<style>
+:root{--bg1:#fff7e0;--bg2:#e3f4ff;--ink:#2b3a55;--pri:#4f8cff;--ok:#2fbf71;--bad:#f0525b;--on:#ffd23f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--ink);background:linear-gradient(135deg,var(--bg1),var(--bg2))}
+.screen{display:none;max-width:860px;margin:0 auto;padding:18px}.screen.on{display:block}
+h1{text-align:center;font-size:2rem;margin:.3em 0}.sub{text-align:center;margin:0 0 14px;opacity:.75}
+.card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #0001}
+.card h3{margin:0 0 10px;font-size:1.05rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.opt,.btn,.bk{font:inherit;border:2px solid #c9d6ee;background:#fff;border-radius:14px;padding:10px 16px;cursor:pointer;color:var(--ink)}
+.opt{flex:1;min-width:150px;font-size:1.05rem}.opt.sel,.bk.sel{background:var(--pri);border-color:var(--pri);color:#fff}
+.bk{padding:6px 12px;font-size:.95rem}
+.btn{background:var(--ok);border-color:var(--ok);color:#fff;font-size:1.2rem;font-weight:700;padding:12px 28px}
+.btn:disabled{background:#c8ced8;border-color:#c8ced8;cursor:not-allowed}
+.lock{opacity:.35;pointer-events:none;filter:grayscale(.6)}
+#lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;margin-top:10px}
+#lessons label{background:#f3f7ff;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:.95rem}
+.mini{font:inherit;font-size:.85rem;border:1px solid #c9d6ee;background:#fff;border-radius:8px;padding:3px 10px;cursor:pointer}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border-radius:14px;padding:8px 14px;box-shadow:0 3px 10px #0001;font-weight:700}
+#board{position:relative;margin:14px 0}
+#board.simple{display:flex;justify-content:space-between;gap:34%}
+#board.simple .col{display:flex;flex-direction:column;gap:10px;flex:1}
+#board.adv{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:520px;margin:14px auto}
+#ln{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.tile{font:inherit;font-weight:700;font-size:1.9rem;min-height:66px;border:3px solid #c9d6ee;background:#fff;border-radius:16px;cursor:pointer;color:var(--ink);transition:.15s}
+.adv .tile{aspect-ratio:1;font-size:2.2rem;border-radius:50%}
+.tile.p{font-size:1.5rem}.adv .tile.p{font-size:1.35rem}
+.tile.on{background:var(--on);border-color:#f0a800;box-shadow:0 0 20px 6px #ffd23f99;transform:scale(1.06)}
+.tile.ok{background:#d6f7e4;border-color:var(--ok);color:#137a45;cursor:default}
+.tile.bad{background:#ffe0e2;border-color:var(--bad);animation:sh .4s}
+@keyframes sh{25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+#msg{min-height:2em;text-align:center;font-size:1.15rem;font-weight:700}
+#done{text-align:center}#done .w{display:inline-block;margin:4px;padding:4px 12px;border-radius:10px;background:#d6f7e4}
+.stat{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed #d5deee}
+.stat:last-child{border:0}
+ul.weak{margin:6px 0;padding-left:20px}
+.center{text-align:center}
+#board.adv.u{grid-template-columns:repeat(6,1fr);max-width:660px;gap:7px}
+.u .tile{font-size:1.45rem}.u .tile.p{font-size:1rem}
+input,select{font:inherit;padding:7px 10px;border:2px solid #c9d6ee;border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{padding:6px 8px;border-bottom:1px solid #e1e8f5;white-space:nowrap;text-align:center}th{background:#eef3ff}tr.me{background:#fff3b8}
+.dx{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}
+.mc{background:#fff;border:3px solid var(--rc,#c9d6ee);border-radius:14px;padding:6px;text-align:center;font-size:.8rem;position:relative}
+.mc.M{box-shadow:0 0 16px 3px var(--rc)}.mc.L{box-shadow:0 0 10px 2px var(--rc)}
+.mc .im{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2.4rem;background:#f1f5fb;border-radius:10px;overflow:hidden}
+.mc img{width:100%;height:100%;object-fit:contain}
+.mc.lk{filter:grayscale(1);opacity:.5;box-shadow:none}
+.mc .lv{position:absolute;top:2px;right:4px;z-index:1;background:var(--rc);color:#fff;border-radius:8px;padding:0 6px;font-weight:700}
+.bdg{display:inline-block;padding:0 8px;border-radius:8px;color:#fff;font-weight:700;font-size:.75rem;background:var(--rc)}
+#draw .mc{max-width:220px;margin:8px auto;font-size:1rem;animation:pop .8s}
+@keyframes pop{0%{transform:scale(.2) rotate(-20deg);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+#okb{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.4);opacity:0;pointer-events:none;font-size:3rem;font-weight:900;color:#fff;background:var(--ok);padding:10px 36px;border-radius:30px;box-shadow:0 8px 30px #0004;z-index:99}
+#okb.show{animation:okp 1.4s}
+@keyframes okp{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(1)}}
+.mini.sel{background:var(--pri);border-color:var(--pri);color:#fff}
+#hLife{display:inline-block}.gain{animation:gn 1s}@keyframes gn{30%{transform:scale(1.6)}100%{transform:scale(1)}}
+.mc{color:var(--ink)}
+#rit{position:fixed;inset:0;background:radial-gradient(circle at 50% 35%,#3b2486,#0b0620 75%);z-index:100;display:flex;align-items:center;justify-content:center;overflow:auto;color:#fff}
+#rit[hidden]{display:none}#rit.shk{animation:shk .6s}
+@keyframes shk{20%{transform:translate(-9px,4px)}40%{transform:translate(9px,-4px)}60%{transform:translate(-6px,-3px)}80%{transform:translate(6px,3px)}}
+.rw{text-align:center;padding:20px;max-width:680px;width:100%;margin:auto}.rw h2{margin:.2em 0}
+.circ{width:180px;height:180px;margin:18px auto;border-radius:50%;border:6px dashed var(--c);display:flex;align-items:center;justify-content:center;font-size:4rem;cursor:pointer;user-select:none;transition:transform .12s;animation:glw 1.2s ease-in-out infinite alternate}
+.circ.tap{transform:scale(1.25)}
+@keyframes glw{from{box-shadow:0 0 18px var(--c)}to{box-shadow:0 0 55px 10px var(--c)}}
+.bar{height:14px;background:#fff3;border-radius:8px;overflow:hidden;max-width:300px;margin:0 auto 12px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd23f,#ff3d81);transition:.2s}
+.rcards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.fc{width:120px;height:170px;border-radius:14px;background:repeating-linear-gradient(45deg,#4b2fb3,#4b2fb3 8px,#6a49e0 8px,#6a49e0 16px);border:3px solid #ffd23f;display:flex;align-items:center;justify-content:center;font-size:3rem;cursor:pointer;animation:wig 1.6s ease-in-out infinite;transition:transform .3s}
+.fc:hover{transform:translateY(-8px) scale(1.07)}
+@keyframes wig{50%{rotate:3deg;translate:0 -4px}}
+.fc.pick{animation:fsh .12s infinite}@keyframes fsh{50%{transform:translateX(5px)}}
+.fc.dim{opacity:.3;filter:grayscale(1);animation:none}
+.rcards .mc{width:140px;font-size:.9rem;animation:pop .8s}.rcards .mc.dim{opacity:.5;filter:grayscale(.7);animation:none}
+#rit .mc.big{width:170px;font-size:1rem}
+#fl{position:fixed;inset:0;opacity:0;pointer-events:none}#fl.on{animation:flsh 1s}@keyframes flsh{0%{opacity:.9}100%{opacity:0}}
+#board.lk .tile:not(.ok){opacity:.55;cursor:wait}#lkt{text-align:center;color:#b3261e;font-weight:700;min-height:1.4em}
+.tile.tip{box-shadow:0 0 0 5px #ff9f1c,0 0 24px 8px #ffb84d;animation:tp2 .6s ease-in-out infinite alternate}@keyframes tp2{to{transform:scale(1.1)}}
+#learn{background:#fff8e1;text-align:left;line-height:1.7}
+</style></head><body>
+
+<div id="okb">🎉 答對了！</div>
+<div id="rit" hidden></div>
+<div id="home" class="screen on">
+ <h1>🎯 生詞大挑戰</h1><p class="sub">華文泰北版 N2・一年級到六年級</p>
+ <div class="card" id="hi" style="text-align:center;font-size:1.15rem;font-weight:700"></div>
+ <div class="card"><h3>🔊 聲音設定</h3><div class="row" style="align-items:center"><button class="mini tg" data-t="bgm"></button><button class="mini tg" data-t="sfx"></button><button class="mini" id="tTest">🔈 試聽語音</button></div><p id="vn" style="margin:8px 0 0;font-size:.85rem;color:#b3261e"></p></div>
+ <div class="card"><h3>① 選擇難度</h3><div class="row" id="dRow">
+  <button class="opt sel" data-d="s">🌱 簡單版<br><small>五個詞・左右連線</small></button>
+  <button class="opt" data-d="a">🔥 進階版<br><small>4×4 燈格・2～4 字詞語</small></button>
+  <button class="opt" data-d="u">♾️ 無限版<br><small>6×6 燈格・長短詞語・課外詞也算</small></button></div></div>
+ <div class="card"><h3>② 選擇玩法</h3><div class="row" id="kRow">
+  <button class="opt" data-k="c">📖 看國字造詞</button>
+  <button class="opt" data-k="p">🔤 看拼音造詞</button></div></div>
+ <div class="card lock" id="range"><h3>③ 選擇練習範圍（先選好玩法才會亮起）</h3>
+  <div class="row" id="rm"><button class="bk sel" data-m="single">📘 單冊</button><button class="bk" data-m="combined">🧩 跨冊</button><button class="bk" data-m="wrong">⚠️ 常錯詞彙</button></div>
+  <div id="pS" style="margin-top:12px">
+   <div class="row" id="books"></div>
+   <div style="margin-top:10px"><button class="mini" id="all">全選課文</button> <button class="mini" id="none">取消全選</button></div>
+   <div id="lessons"></div></div>
+  <div id="pC" hidden style="margin-top:12px"><p style="margin:0 0 8px">勾選要混合練習的冊別（可複選，跨年級一起練）</p>
+   <div class="row" id="cb"></div>
+   <div style="margin-top:10px"><button class="mini" id="cAll">全選</button> <button class="mini" id="cNone">取消全選</button></div></div>
+  <div id="pW" hidden style="margin-top:12px"><p style="margin:0 0 8px">越常答錯的詞，出現機率越高；在這個模式答對會慢慢減少次數。</p>
+   <div id="wl"></div><div style="margin-top:10px"><button class="mini" id="wClr">清除常錯紀錄</button></div></div></div>
+ <div class="center"><button class="btn" id="go" disabled>開始遊戲</button> <button class="opt" id="zoneb" style="flex:none">🎮 遊戲區</button> <button class="opt" id="rec" style="flex:none">🏆 分數紀錄表</button> <button class="opt" id="dxb" style="flex:none">📖 怪物圖鑑</button></div>
+</div>
+
+<div id="game" class="screen">
+ <div class="hud"><span id="hLv"></span><span id="hPr"></span><span id="hDraw"></span><span><button class="mini tg" data-t="bgm"></button> <button class="mini tg" data-t="sfx"></button></span><span id="hLife"></span><button class="mini" id="quit">🏠 主選單</button></div>
+ <div id="board"></div><div id="msg"></div><div id="lkt" hidden>🔊 聽完這個詞，才能選下一個詞…</div>
+ <div class="center" style="margin:6px"><button class="opt" id="tch" style="flex:none"></button></div>
+ <div id="ctl" class="center" hidden style="margin:8px"><button class="btn" id="sub" style="font-size:1rem;padding:8px 20px">✔ 送出</button> <button class="opt" id="cnl" style="flex:none">↩ 取消選取</button></div>
+ <div id="done"></div><div id="draw" class="center"></div><div id="learn" class="card" hidden></div>
+ <div class="center"><button class="btn" id="next" hidden>下一關 →</button></div>
+</div>
+
+<div id="over" class="screen">
+ <h1>GAME OVER</h1><p class="sub" id="oTip"></p>
+ <div class="card" id="oStat"></div>
+ <div class="card"><h3>📋 這些詞要多練習</h3><div id="oWeak"></div></div>
+ <div class="card"><h3>🎁 本局抽到的怪物</h3><div class="dx" id="oDraw"></div></div>
+ <div class="card"><h3>📚 課外生詞（國語辭典也算對）</h3><div id="oExtra"></div></div>
+ <div class="center"><button class="btn" id="again">再玩一次</button> <button class="opt" id="rec2">🏆 分數紀錄表</button> <button class="opt" id="dx2">📖 怪物圖鑑</button> <button class="opt" id="home2">🏠 回主選單</button></div>
+</div>
+
+<div id="recs" class="screen" style="max-width:1100px">
+ <h1>🏆 分數紀錄表</h1><p class="sub">計分：拼對 +10、課外詞再 +5、過關 +30，再乘難度倍率（簡單×1、進階×1.5、無限×2）</p>
+ <div class="card"><div class="row" style="align-items:center">
+  <select id="rfD"><option value="">全部難度</option><option value="s">簡單版</option><option value="a">進階版</option><option value="u">無限版</option></select>
+  <input id="rfN" placeholder="搜尋姓名">
+  <button class="mini" id="csv">⬇ 匯出 CSV</button><button class="mini" id="clr">🗑 清除紀錄</button><button class="mini" id="rBack">← 返回</button></div>
+  <div style="overflow-x:auto;margin-top:10px"><table id="rt"></table></div>
+  <p style="font-size:.85rem;opacity:.7">紀錄存在這台電腦的這個瀏覽器裡；要集中全班成績，請各台匯出 CSV 再合併。</p></div></div>
+<div id="dex" class="screen" style="max-width:1000px">
+ <h1>📖 怪物圖鑑</h1><p class="sub" id="dxSub"></p>
+ <div class="card"><div class="row" style="align-items:center"><select id="dxF"><option value="">全部</option><option value="got">已解鎖</option><option value="N">普通</option><option value="E">菁英</option><option value="L">傳說</option><option value="M">神話</option></select>
+  <b id="dxCnt"></b><button class="mini" id="dxBack">← 返回</button></div></div>
+ <div class="dx" id="dxg"></div></div>
+<script src="relax-break.bundle.js"></script>
+<script src="monsters/monsters.js"></script>
+<script>
+const BOOKS=[{"n":"一年級上冊","L":[{"n":"01","t":"我起來了","w":[["天天","tiān tiān"],["來了","lái le"],["早起","zǎo qǐ"],["太亮","tài liàng"],["天亮","tiān liàng"],["起來","qǐ lái"],["太陽","tài yáng"]]},{"n":"02","t":"小方上學","w":[["好看","hǎo kàn"],["小學","xiǎo xué"],["老師","lǎo shī"],["上學","shàng xué"],["同學","tóng xué"],["小方","xiǎo fāng"],["看到","kàn dào"]]},{"n":"03","t":"我的書包","w":[["我的","wǒ de"],["也有","yě yǒu"],["書包","shū bāo"],["四本","sì běn"],["上學","shàng xué"],["三枝","sān zhī"],["一個","yī gè"]]},{"n":"04","t":"小方學寫字","w":[["用心","yòng xīn"],["放好","fàng hǎo"],["老師","lǎo shī"],["漂亮","piào liàng"],["身體","shēn tǐ"],["媽媽","mā mā"],["寫字","xiě zì"],["坐正","zuò zhèng"],["兩手","liǎng shǒu"]]},{"n":"05","t":"公園裡","w":[["摘下","zhāi xià"],["草地","cǎo dì"],["還有","hái yǒu"],["很美","hěn měi"],["踩它","cǎi tā"],["大樹高","dà shù gāo"],["公園","gōng yuán"],["不要","bú yào"],["爬上去","pá shàng qù"],["我們","wǒ men"]]},{"n":"06","t":"小小鳥兒","w":[["你的","nǐ de"],["真好聽","zhēn hǎo tīng"],["什麼","shén me"],["告訴","gào sù"],["唱歌","chàng gē"],["小鳥","xiǎo niǎo"],["一起","yì qǐ"],["好不好","hǎo bù hǎo"]]},{"n":"07","t":"打招呼","w":[["小時候","xiǎo shí hòu"],["看見","kàn jiàn"],["雙手","shuāng shǒu"],["時候","shí hòu"],["現在","xiàn zài"],["見面","jiàn miàn"],["合掌","hé zhǎng"],["爸爸","bà bà"],["行禮","xíng lǐ"]]},{"n":"08","t":"小方過生日","w":[["打電話","dǎ diàn huà"],["不是","bú shì"],["明天","míng tiān"],["過來","guò lái"],["大家","dà jiā"],["生日","shēng rì"],["一定","yí dìng"]]},{"n":"09","t":"小狗跟我來","w":[["小狗","xiǎo gǒu"],["快不快","kuài bù kuài"],["哪裡","nǎ lǐ"],["遠不遠","yuǎn bù yuǎn"],["比一比","bǐ yī bǐ"],["踢球","tī qiú"],["跟我來","gēn wǒ lái"],["跑得快","pǎo dé kuài"]]},{"n":"10","t":"我做一條船","w":[["出海","chū hǎi"],["哥哥","gē gē"],["哪裡","nǎ lǐ"],["送給","sòng gěi"],["打魚","dǎ yú"],["弟弟","dì di"],["姐姐","jiě jiě"],["外婆","wài pó"]]},{"n":"11","t":"過山洞","w":[["多少","duō shǎo"],["妹妹","mèi mèi"],["幾個","jǐ gè"],["很長","hěn zhǎng"],["數一數","shù yī shù"],["長又長","zhǎng yòu zhǎng"],["火車","huǒ chē"],["山洞","shān dòng"],["過了","guò le"],["數完","shù wán"]]},{"n":"12","t":"小方數牛","w":[["少了","shǎo le"],["連忙","lián máng"],["數著","shù zhù"],["一頭","yī tóu"],["一面","yí miàn"],["走累","zǒu lèi"],["怎麼","zěn me"],["不錯","bù cuò"],["走路","zǒu lù"]]},{"n":"13","t":"我家的院子","w":[["澆花","jiāo huā"],["拍皮球","pāi pí qiú"],["小狗","xiǎo gǒu"],["院子","yuàn zi"],["跳到","tiào dào"],["掃地","sǎo dì"],["小貓","xiǎo māo"]]},{"n":"14","t":"老師說笑話","w":[["白紙","bái zhǐ"],["吃草","chī cǎo"],["畫家","huà jiā"],["一張","yī zhāng"],["笑話","xiào huà"],["回答","huí dá"]]},{"n":"15","t":"我喜歡大象","w":[["很多","hěn duō"],["高大","gāo dà"],["一隻","yī zhī"],["喜歡","xǐ huān"],["耳朵","ěr duǒ"],["大象","dà xiàng"],["泰國","tài guó"],["帶著","dài zhù"],["三頭","sān tóu"],["還有","hái yǒu"]]}]},{"n":"一年級下冊","L":[{"n":"01","t":"上學去","w":[["玩耍","wán shuǎ"],["下課","xià kè"],["走進","zǒu jìn"],["上課","shàng kè"],["長高","zhǎng gāo"],["打球","dǎ qiú"],["看到","kàn dào"],["相見","xiāng jiàn"],["快樂","kuài lè"],["學校","xué xiào"],["開學","kāi xué"],["一起","yì qǐ"]]},{"n":"02","t":"小毛蟲","w":[["葉子","yè zi"],["不偷懶","bù tōu lǎn"],["可愛","kě ài"],["爬到","pá dào"],["毛蟲","máo chóng"],["飛來飛去","fēi lái fēi qù"],["吃喝","chī hē"]]},{"n":"03","t":"小星星","w":[["發出","fā chū"],["亮光","liàng guāng"],["一閃","yī shǎn"],["晚上","wǎn shàng"],["天空","tiān kōng"],["夏天","xià tiān"],["一共","yī gòng"],["連成","lián chéng"],["星星","xīng xīng"]]},{"n":"04","t":"美麗的彩虹","w":[["彎彎的","wān wān de"],["許多","xǔ duō"],["美麗","měi lì"],["顏色","yán sè"],["趕快","gǎn kuài"],["好像","hǎo xiàng"],["彩虹","cǎi hóng"],["出現","chū xiàn"],["一座橋","yī zuò qiáo"]]},{"n":"05","t":"春天來了","w":[["怎麼","zěn me"],["春天","chūn tiān"],["開滿","kāi mǎn"],["天氣","tiān qì"],["笑著","xiào zhù"],["坐車","zuò chē"],["只要","zhǐ yào"],["暖和","nuǎn huo"],["草綠","cǎo lǜ"]]},{"n":"06","t":"種樹","w":[["種樹","zhǒng shù"],["最好吃","zuì hǎo chī"],["松樹","sōng shù"],["風雨","fēng yǔ"],["活得長","huó dé zhǎng"],["香蕉","xiāng jiāo"],["澆水","jiāo shuǐ"],["山茶花","shān chá huā"],["重要","zhòng yào"]]},{"n":"07","t":"看大象表演","w":[["畫圖","huà tú"],["拿起","ná qǐ"],["謝謝","xiè xiè"],["跳舞","tiào wǔ"],["還想","hái xiǎng"],["一邊","yī biān"],["下午","xià wǔ"],["表演","biǎo yǎn"],["音樂","yīn lè"],["買了","mǎi le"]]},{"n":"08","t":"烏鴉喝水","w":[["一點","yī diǎn"],["找水","zhǎo shuǐ"],["水瓶","shuǐ píng"],["升高","shēng gāo"],["法子","fǎ zi"],["烏鴉","wū yā"],["放到","fàng dào"],["口渴","kǒu kě"],["想出","xiǎng chū"],["一隻","yī zhī"]]},{"n":"09","t":"小方學會新詞語","w":[["學會","xué huì"],["一件","yī jiàn"],["聽到","tīng dào"],["神氣","shén qì"],["照相","zhào xiàng"],["詞語","cí yǔ"],["注意","zhù yì"],["衣服","yī fú"],["滿意","mǎn yì"]]},{"n":"10","t":"可愛的猴子","w":[["行禮","xíng lǐ"],["朋友","péng yǒu"],["動物","dòng wù"],["動物園","dòng wù yuán"],["放假","fàng jià"],["門口","mén kǒu"],["碰到","pèng dào"],["拍手","pāi shǒu"],["山羊","shān yáng"],["摸頭","mō tóu"],["猴子","hóu zi"]]},{"n":"11","t":"你的歌聲真好聽","w":[["高興","gāo xìng"],["聽說","tīng shuō"],["姑娘","gū niáng"],["一塊肉","yī kuài ròu"],["一棵","yī kē"],["想不到","xiǎng bú dào"],["掉下去","diào xià qù"],["歌聲","gē shēng"],["聰明","cōng míng"],["叼著","diāo zhù"]]},{"n":"12","t":"過橋","w":[["不讓","bù ràng"],["退後","tuì hòu"],["東邊","dōng biān"],["等一下","děng yí xià"],["西邊","xī biān"],["這裡","zhè lǐ"],["這一頭","zhè yī tóu"],["那裡","nà lǐ"],["那一頭","nà yī tóu"],["過橋","guò qiáo"],["不肯","bù kěn"],["打起來","dǎ qǐ lái"],["中間","zhōng jiān"],["兩個","liǎng gè"]]},{"n":"13","t":"小蝸牛","w":[["辛苦","xīn kǔ"],["躲在","duǒ zài"],["每天","měi tiān"],["食物","shí wù"],["背著","bèi zhù"],["爬樹","pá shù"],["下雨","xià yǔ"],["沒有","méi yǒu"],["房間","fáng jiān"],["一直","yì zhí"]]},{"n":"14","t":"兒歌—打電話","w":[["散步","sàn bù"],["兒歌","ér gē"],["第一","dì yī"],["電話","diàn huà"],["正在","zhèng zài"],["金色","jīn sè"],["知道","zhī dào"],["第一通","dì yí tòng"],["告訴","gào sù"],["今天","jīn tiān"],["陽光","yáng guāng"]]},{"n":"15","t":"嘟嘟車","w":[["放假","fàng jià"],["嘟嘟車","dū dū chē"],["以後","yǐ hòu"],["叔叔","shū shū"],["如果","rú guǒ"],["接到","jiē dào"],["曼谷","màn gǔ"],["全家","quán jiā"],["輪子","lún zi"],["好奇","hào qí"]]}]},{"n":"二年級上冊","L":[{"n":"01","t":"開學的那一天","w":[["歡迎","huān yíng"],["開學","kāi xué"],["幫助","bāng zhù"],["希望","xī wàng"],["學期","xué qī"],["讀書","dú shū"],["班上","bān shàng"],["好久不見","hǎo jiǔ bù jiàn"]]},{"n":"02","t":"太陽","w":[["忙著","máng zhù"],["做事","zuò shì"],["開得","kāi dé"],["休息","xiū xī"],["香甜","xiāng tián"],["勤勞","qín láo"],["春夏秋冬","chūn xià qiū dōng"]]},{"n":"03","t":"畫一張畫","w":[["彩色筆","cǎi sè bǐ"],["有時","yǒu shí"],["房屋","fáng wū"],["工作","gōng zuò"],["河流","hé liú"],["高高低低","gāo gāo dī dī"],["大自然","dà zì rán"],["站在","zhàn zài"]]},{"n":"04","t":"童詩兩首","w":[["後頭","hòu tóu"],["哭了","kū le"],["小鵝","xiǎo é"],["兩首","liǎng shǒu"],["洋娃娃","yáng wá wá"],["向前走","xiàng qián zǒu"],["綠波","lǜ bō"],["笑哈哈","xiào hā hā"],["野草地","yě cǎo dì"]]},{"n":"05","t":"小蜘蛛","w":[["水珠","shuǐ zhū"],["蜜蜂","mì fēng"],["一動也不動","yī dòng yě bù dòng"],["蜘蛛","zhī zhū"],["趕忙","gǎn máng"],["結網","jié wǎng"],["一樣","yī yàng"],["蚊子","wén zi"],["閃閃發光","shǎn shǎn fā guāng"],["珍珠","zhēn zhū"],["一不小心","yí bù xiǎo xīn"],["抓住","zhuā zhù"]]},{"n":"06","t":"井裡一隻蛙","w":[["只有","zhǐ yǒu"],["抬起頭","tái qǐ tóu"],["為什麼","wèi shén me"],["又深又黑","yòu shēn yòu hēi"],["喘著氣","chuǎn zhù qì"],["好累","hǎo lèi"],["應該","yīng gāi"],["井裡","jǐng lǐ"],["一口","yī kǒu"],["世界","shì jiè"]]},{"n":"07","t":"泰國的國旗","w":[["兩旁","liǎng páng"],["國旗","guó qí"],["插滿","chā mǎn"],["宗教","zōng jiào"],["藍色","lán sè"],["顏色","yán sè"],["覺得","jué dé"],["人民","rén mín"],["當然","dāng rán"]]},{"n":"08","t":"送給媽媽的禮物","w":[["卡片","kǎ piàn"],["非常","fēi cháng"],["但是","dàn shì"],["自己","zì jǐ"],["敬上","jìng shàng"],["想送","xiǎng sòng"],["感謝","gǎn xiè"],["喜歡","xǐ huān"],["母親節","mǔ qīn jié"],["姐姐","jiě jiě"]]},{"n":"09","t":"時鐘","w":[["休息","xiū xī"],["日夜","rì yè"],["努力","nǔ lì"],["長針","zhǎng zhēn"],["時鐘","shí zhōng"],["快慢","kuài màn"],["回頭","huí tóu"],["愛惜","ài xī"],["分秒","fēn miǎo"],["不停","bù tíng"]]},{"n":"10","t":"愛惜光陰","w":[["光線","guāng xiàn"],["影子","yǐng zi"],["竹竿","zhú gān"],["光陰","guāng yīn"],["古時候","gǔ shí hòu"],["聰明","cōng míng"],["利用","lì yòng"],["愛惜","ài xī"]]},{"n":"11","t":"鵝媽媽真漂亮","w":[["寶寶","bǎo bǎo"],["衣裳","yī shang"],["漂亮","piào liàng"],["伸長","shēn zhǎng"],["神氣","shén qì"]]},{"n":"12","t":"去外婆家","w":[["泡茶","pào chá"],["保護","bǎo hù"],["晒乾","shài qián"],["外婆","wài pó"],["茶葉","chá yè"],["茶園","chá yuán"]]},{"n":"13","t":"不學寫字有壞處","w":[["小蟲","xiǎo chóng"],["葉子","yè zi"],["想念","xiǎng niàn"],["意思","yì si"],["寫信","xiě xìn"],["咬了","yǎo le"],["螞蟻","mǎ yǐ"],["表示","biǎo shì"],["不懂","bù dǒng"],["怎麼辦","zěn me bàn"],["回信","huí xìn"]]},{"n":"14","t":"神奇的線","w":[["城堡","chéng bǎo"],["舉手","jǔ shǒu"],["遊戲","yóu xì"],["小矮人","xiǎo ǎi rén"],["直線","zhí xiàn"],["黑板","hēi bǎn"],["仙桃","xiān táo"],["巨人","jù rén"]]},{"n":"15","t":"到佛寺拜拜","w":[["脫鞋","tuō xié"],["整齊","zhěng qí"],["佛寺","fó sì"],["希望","xī wàng"],["短褲","duǎn kù"],["拜拜","bài bài"],["穿著","chuān zhù"],["安靜","ān jìng"],["平安","píng ān"],["佛祖","fó zǔ"],["拖鞋","tuō xié"]]}]},{"n":"二年級下冊","L":[{"n":"01","t":"認識同學","w":[["認識","rèn shí"],["上台","shàng tái"],["學期","xué qī"],["清楚","qīng chǔ"],["以前","yǐ qián"],["吸了","xī le"],["慢慢","màn màn"],["年級","nián jí"],["很怕","hěn pà"],["姓名","xìng míng"]]},{"n":"02","t":"山羊長大了","w":[["鬍子","hú zi"],["高興","gāo xìng"],["伯伯","bó bo"],["遇見","yù jiàn"],["看見","kàn jiàn"],["下巴","xià bā"],["小角","xiǎo jiǎo"],["河邊","hé biān"],["一些","yī xiē"],["鹿公公","lù gōng gōng"],["倒影","dào yǐng"]]},{"n":"03","t":"雙手和大腦","w":[["創造","chuàng zào"],["快樂","kuài lè"],["事情","shì qíng"],["思考","sī kǎo"],["煩惱","fán nǎo"],["一定","yí dìng"],["動手","dòng shǒu"],["成果","chéng guǒ"],["大腦","dà nǎo"],["巧妙","qiǎo miào"]]},{"n":"04","t":"一顆種子","w":[["覺得","jué dé"],["新鮮","xīn xiān"],["原來","yuán lái"],["舒服","shū fú"],["伸出","shēn chū"],["泥土","ní tǔ"],["一顆","yī kē"],["呼吸","hū xī"],["醒來","xǐng lái"],["種子","zhǒng zi"]]},{"n":"05","t":"截竿進城","w":[["截斷","jié duàn"],["覺得","jué dé"],["太窄","tài zhǎi"],["太寬","tài kuān"],["道理","dào lǐ"],["不夠","bù gòu"],["城門口","chéng mén kǒu"],["才好","cái hǎo"],["發現","fā xiàn"],["橫著","héng zhù"],["已經","yǐ jīng"]]},{"n":"06","t":"紅花與眼花","w":[["太強","tài qiáng"],["容易","róng yì"],["爺爺","yé yé"],["中文","zhōng wén"],["紅花","hóng huā"],["眼鏡","yǎn jìng"],["花白","huā bái"],["眼花","yǎn huā"],["清楚","qīng chǔ"],["頭髮","tóu fà"]]},{"n":"07","t":"我的中文學校","w":[["北部","běi bù"],["機會","jī huì"],["本事","běn shì"],["大陸","dà lù"],["華文","huá wén"],["家鄉","jiā xiāng"],["茶葉","chá yè"],["辛苦","xīn kǔ"],["軍人","jūn rén"],["努力","nǔ lì"],["果樹","guǒ shù"],["子孫","zi sūn"]]},{"n":"08","t":"我有一本字典","w":[["昨天","zuó tiān"],["練習","liàn xí"],["部首","bù shǒu"],["好奇","hào qí"],["因為","yīn wèi"],["左邊","zuǒ biān"],["右邊","yòu biān"],["方法","fāng fǎ"],["字典","zì diǎn"]]},{"n":"09","t":"農家樂","w":[["映著","yìng zhù"],["耕田","gēng tián"],["除草","chú cǎo"],["一幅","yī fú"],["風光","fēng guāng"],["菜園","cài yuán"],["水田","shuǐ tián"],["新鮮","xīn xiān"],["家家戶戶","jiā jiā hù hù"],["農村","nóng cūn"],["插秧","chā yāng"],["收成","shōu chéng"],["農家","nóng jiā"]]},{"n":"10","t":"小老鼠救獅子","w":[["害怕","hài pà"],["生氣","shēng qì"],["尖利","jiān lì"],["網子","wǎng zi"],["睡著","shuì zhù"],["吃不飽","chī bù bǎo"],["吵醒","chǎo xǐng"],["咬斷","yǎo duàn"],["爪子","zhuǎ zi"],["獅子","shī zi"],["捉住","zhuō zhù"],["可憐","kě lián"]]},{"n":"11","t":"「馬上」小猴","w":[["錯了","cuò le"],["回答","huí dá"],["身子","shēn zi"],["弄痛","nòng tòng"],["傷心","shāng xīn"],["從此","cóng cǐ"],["馬上","mǎ shàng"],["總是","zǒng shì"],["眼前","yǎn qián"]]},{"n":"12","t":"螞蟻和蚱蜢","w":[["停止","tíng zhǐ"],["雪地","xuě dì"],["工作","gōng zuò"],["勤勞","qín láo"],["力氣","lì qì"],["準備","zhǔn bèi"],["變冷","biàn lěng"],["寒冷","hán lěng"],["一直","yì zhí"],["美好","měi hǎo"],["有氣無力","yǒu qì wú lì"],["飢餓","jī è"]]},{"n":"13","t":"家","w":[["需要","xū yào"],["奶奶","nǎi nǎi"],["飄動","piāo dòng"],["照顧","zhào gù"],["充滿","chōng mǎn"],["舒服","shū fú"],["流浪","liú làng"],["溫暖","wēn nuǎn"],["到處","dào chù"],["鳥窩","niǎo wō"]]},{"n":"14","t":"拜年","w":[["貼了","tiē le"],["炮竹","pào zhú"],["祝福","zhù fú"],["喜氣洋洋","xǐ qì yáng yáng"],["一歲","yī suì"],["春聯","chūn lián"],["吵醒","chǎo xǐng"],["福字","fú zì"],["初一","chū yī"],["爺爺","yé yé"]]},{"n":"15","t":"帕當看日出","w":[["一眨眼","yī zhǎ yǎn"],["黑暗","hēi àn"],["盯著","dīng zhù"],["翻動","fān dòng"],["圍巾","wéi jīn"],["戴上","dài shàng"],["彩色","cǎi sè"],["雲海","yún hǎi"],["帕當","pà dāng"]]}]},{"n":"三年級上冊","L":[{"n":"01","t":"小松樹長大","w":[["堅定","jiān dìng"],["四周","sì zhōu"],["仔細","zǎi xì"],["身旁","shēn páng"],["東倒西歪","dōng dào xī wāi"],["害怕","hài pà"],["勇敢","yǒng gǎn"]]},{"n":"02","t":"繞口令","w":[["記住","jì zhù"],["難念","nán niàn"],["繞口令","rào kǒu lìng"],["清楚","qīng chǔ"],["得意","dé yì"]]},{"n":"03","t":"賞鳥去","w":[["溼地","shī dì"],["過冬","guò dōng"],["成千上萬","chéng qiān shàng wàn"],["候鳥","hòu niǎo"],["成群結隊","chéng qún jié duì"],["驚嚇","jīng xià"]]},{"n":"04","t":"我的家","w":[["桂花","guì huā"],["庭院","tíng yuàn"],["廳堂","tīng táng"],["健康","jiàn kāng"],["蘭花","lán huā"],["整潔","zhěng jié"],["離開","lí kāi"],["清涼","qīng liáng"],["學堂","xué táng"],["恩惠","ēn huì"],["慈祥","cí xiáng"]]},{"n":"05","t":"包粽子","w":[["除了","chú le"],["立蛋","lì dàn"],["形狀","xíng zhuàng"],["口味","kǒu wèi"],["端午節","duān wǔ jié"],["節日","jié rì"],["龍舟","lóng zhōu"],["豆沙","dòu shā"],["活動","huó dòng"],["特有","tè yǒu"],["香味","xiāng wèi"]]},{"n":"06","t":"快樂的一天","w":[["客廳","kè tīng"],["晴天","qíng tiān"],["勤快","qín kuài"],["分配","fēn pèi"],["整理","zhěng lǐ"],["家具","jiā jù"],["有點兒","yǒu diǎn ér"],["桌椅","zhuō yǐ"],["動手","dòng shǒu"],["乾淨","qián jìng"]]},{"n":"07","t":"母親像太陽","w":[["風霜","fēng shuāng"],["情懷","qíng huái"],["阻擋","zǔ dǎng"],["聖潔","shèng jié"],["堅強","jiān qiáng"],["光芒","guāng máng"],["守候","shǒu hòu"],["偉大","wěi dà"],["照耀","zhào yào"],["善良","shàn liáng"]]},{"n":"08","t":"清邁夜市","w":[["來往","lái wǎng"],["夜市","yè shì"],["風景","fēng jǐng"],["觀光","guān guāng"],["街道","jiē dào"],["木雕","mù diāo"],["吸引","xī yǐn"],["逛街","guàng jiē"],["點心","diǎn xīn"],["染布","rǎn bù"],["燈火","dēng huǒ"]]},{"n":"09","t":"釣魚","w":[["耐心","nài xīn"],["不耐煩","bù nài fán"],["心動","xīn dòng"],["魚竿","yú gān"],["準備","zhǔn bèi"],["上鉤","shàng gōu"],["竟然","jìng rán"],["拉線","lā xiàn"],["午飯","wǔ fàn"],["釣魚","diào yú"],["開始","kāi shǐ"]]},{"n":"10","t":"小鷹學飛","w":[["不斷的","bù duàn de"],["本領","běn lǐng"],["害怕","hài pà"],["森林","sēn lín"],["石頭","shí tóu"],["鼓勵","gǔ lì"],["克服","kè fú"],["休息","xiū xī"],["終於","zhōng yú"],["翅膀","chì bǎng"],["自由自在","zì yóu zì zài"],["勇氣","yǒng qì"]]},{"n":"11","t":"變色的小河","w":[["河底","hé dǐ"],["村莊","cūn zhuāng"],["唱歌","chàng gē"],["垃圾","lā jī"],["快樂","kuài lè"],["種菜","zhǒng cài"],["水溝","shuǐ gōu"],["汙水","wū shuǐ"],["工廠","gōng chǎng"],["髒臭","zāng chòu"],["堆滿","duī mǎn"]]},{"n":"12","t":"美麗的寶島","w":[["安詳","ān xiáng"],["和諧","hé xié"],["高尚","gāo shàng"],["朝陽","cháo yáng"],["禮讓","lǐ ràng"],["層層","céng céng"],["雄壯","xióng zhuàng"],["四季","sì jì"],["善良","shàn liáng"],["周圍","zhōu wéi"],["品德","pǐn dé"],["風光","fēng guāng"]]},{"n":"13","t":"小時候","w":[["小店","xiǎo diàn"],["有趣","yǒu qù"],["盒子","hé zi"],["樓梯","lóu tī"],["癢癢的","yǎng yǎng de"],["腳印","jiǎo yìn"],["剛停","gāng tíng"],["越接越長","yuè jiē yuè zhǎng"]]},{"n":"14","t":"滴水穿石","w":[["身體","shēn tǐ"],["石階","shí jiē"],["穿透","chuān tòu"],["持之以恆","chí zhī yǐ héng"],["不痛不癢","bù tòng bù yǎng"],["露水","lù shuǐ"],["每次","měi cì"],["雖然","suī rán"],["滴水","dī shuǐ"],["水滴","shuǐ dī"],["又厚又硬","yòu hòu yòu yìng"]]},{"n":"15","t":"泰國舞蹈","w":[["舞蹈","wǔ dǎo"],["指甲","zhǐ jiǎ"],["特別","tè bié"],["寶塔","bǎo tǎ"],["擺動","bǎi dòng"],["服裝","fú zhuāng"],["重視","zhòng shì"],["隨著","suí zhù"],["經過","jīng guò"],["泰絲","tài sī"]]}]},{"n":"三年級下冊","L":[{"n":"01","t":"謝謝老師","w":[["懂事","dǒng shì"],["吵架","chǎo jià"],["明理","míng lǐ"],["跑步","pǎo bù"],["緊張","jǐn zhāng"],["教導","jiào dǎo"],["使我","shǐ wǒ"],["忘記","wàng jì"],["漫畫","màn huà"],["操場","cāo chǎng"],["永遠","yǒng yuǎn"]]},{"n":"02","t":"誰最美","w":[["採花蜜","cǎi huā mì"],["一匹","yì pǐ"],["生病","shēng bìng"],["繼續","jì xù"],["梳洗","shū xǐ"],["啄木鳥","zhuó mù niǎo"],["展現","zhǎn xiàn"],["光鮮亮麗","guāng xiān liàng lì"],["抓蟲","zhuā chóng"]]},{"n":"03","t":"合作的重要","w":[["如何","rú hé"],["一粒","yī lì"],["目標","mù biāo"],["互相","hù xiāng"],["搬回","bān huí"],["好處","hǎo chù"],["道理","dào lǐ"],["配合","pèi hé"],["過程","guò chéng"],["幫助","bāng zhù"],["產生","chǎn shēng"],["力量","lì liàng"]]},{"n":"04","t":"愛迪生發明電燈","w":[["成功","chéng gōng"],["發明","fā míng"],["過去","guò qù"],["曾經","céng jīng"],["學習","xué xí"],["聰明","cōng míng"],["煤油","méi yóu"],["材料","cái liào"],["方便","fāng biàn"],["實驗","shí yàn"],["精神","jīng shén"],["天才","tiān cái"],["偉大","wěi dà"],["人類","rén lèi"],["一千","yī qiān"]]},{"n":"05","t":"蔡倫造紙","w":[["試過","shì guò"],["用心","yòng xīn"],["花費","huā fèi"],["世界","shì jiè"],["容易","róng yì"],["不斷","bù duàn"],["失敗","shī bài"],["製造","zhì zào"],["方法","fāng fǎ"],["省錢","shěng qián"],["傳開","chuán kāi"],["破布","pò bù"],["合用","hé yòng"],["鍋子","guō zi"],["歡迎","huān yíng"],["晒乾","shài qián"]]},{"n":"06","t":"水有不同的面貌","w":[["變化","biàn huà"],["雨水","yǔ shuǐ"],["面貌","miàn mào"],["下雪","xià xuě"],["躲在","duǒ zài"],["白雲","bái yún"],["讚美","zàn měi"],["一層","yī céng"],["露水","lù shuǐ"],["回答","huí dá"],["結成","jié chéng"],["化身","huà shēn"],["很厚","hěn hòu"],["滿意","mǎn yì"],["雪花","xuě huā"]]},{"n":"07","t":"泰北義民文史館","w":[["山丘","shān qiū"],["軍人","jūn rén"],["換來","huàn lái"],["戰爭","zhàn zhēng"],["安居樂業","ān jū lè yè"],["山坡","shān pō"],["風景","fēng jǐng"],["觀光客","guān guāng kè"],["將士","jiāng shì"],["資料","zī liào"],["和平","hé píng"],["義民","yì mín"],["紀念","jì niàn"],["歷史","lì shǐ"],["文史","wén shǐ"]]},{"n":"08","t":"如果我是一隻小鳥","w":[["旗杆","qí gān"],["梳洗","shū xǐ"],["起床","qǐ chuáng"],["自由","zì yóu"],["除去","chú qù"],["眺望","tiào wàng"],["高塔","gāo tǎ"],["害蟲","hài chóng"],["提醒","tí xǐng"],["阻隔","zǔ gé"],["趕緊","gǎn jǐn"],["開懷","kāi huái"],["擋路","dǎng lù"]]},{"n":"09","t":"感人的故事","w":[["附近","fù jìn"],["偉大","wěi dà"],["農家","nóng jiā"],["失火","shī huǒ"],["一段時間","yī duàn shí jiān"],["呼叫","hū jiào"],["受傷","shòu shāng"],["根本","gēn běn"],["通知","tōng zhī"],["滅火","miè huǒ"],["抱起","bào qǐ"],["地震","dì zhèn"]]},{"n":"10","t":"新年的希望","w":[["元旦","yuán dàn"],["希望","xī wàng"],["專心","zhuān xīn"],["永遠","yǒng yuǎn"],["健康","jiàn kāng"],["晴朗","qíng lǎng"],["一家之主","yī jiā zhī zhǔ"],["舒服","shū fú"],["團聚","tuán jù"],["活潑","huó pō"]]},{"n":"11","t":"姑姑要出嫁","w":[["轎車","jiào chē"],["金飾","jīn shì"],["鞭炮","biān pào"],["出嫁","chū jià"],["新郎","xīn láng"],["姑丈","gū zhàng"],["婚紗","hūn shā"],["訂婚","dìng hūn"],["喜餅","xǐ bǐng"]]},{"n":"12","t":"要把話聽完","w":[["差一點","chà yī diǎn"],["四腳朝天","sì jiǎo cháo tiān"],["決定","jué dìng"],["森林","sēn lín"],["鼻青臉腫","bí qīng liǎn zhǒng"],["老虎","lǎo hǔ"],["爪子","zhuǎ zi"]]},{"n":"13","t":"義工家庭","w":[["缺席","quē xí"],["打掃","dǎ sǎo"],["社區","shè qū"],["上班","shàng bān"],["熱心","rè xīn"],["不管","bù guǎn"],["寒風刺骨","hán fēng cì gǔ"],["指揮","zhǐ huī"],["醫院","yī yuàn"],["交通","jiāo tōng"]]},{"n":"14","t":"美麗的春天","w":[["桃花","táo huā"],["淡淡的","dàn dàn de"],["來臨","lái lín"],["泉水","quán shuǐ"],["風箏","fēng zhēng"],["柔柔的","róu róu de"],["插秧","chā yāng"],["一山","yī shān"],["踏青","tà qīng"],["新芽","xīn yá"],["歡迎","huān yíng"],["絲絲的","sī sī de"]]},{"n":"15","t":"金色的泰國","w":[["路燈","lù dēng"],["一尊","yī zūn"],["華麗","huá lì"],["炸得","zhà dé"],["牆上","qiáng shàng"],["閃閃的","shǎn shǎn de"],["盤子","pán zi"],["打造","dǎ zào"],["機場","jī chǎng"],["鑲著","xiāng zhù"],["勾著","gōu zhù"],["不僅","bù jǐn"],["餐廳","cān tīng"]]}]},{"n":"四年級上冊","L":[{"n":"01","t":"大自然的語言","w":[["旅遊","lǚ yóu"],["語言","yǔ yán"],["一圈圈","yī quān quān"],["雨傘","yǔ sǎn"],["觀察","guān chá"],["方式","fāng shì"],["池塘","chí táng"],["年紀","nián jì"],["陰沉","yīn chén"]]},{"n":"02","t":"清明節","w":[["頑皮","wán pí"],["掃墓","sǎo mù"],["生前","shēng qián"],["祭品","jì pǐn"],["嬸嬸","shěn shěn"],["鞠躬","jū gōng"],["拔草","bá cǎo"],["撿樹枝","jiǎn shù zhī"],["剪刀","jiǎn dāo"],["抹了","mǒ le"]]},{"n":"03","t":"告訴我","w":[["勇氣百倍","yǒng qì bǎi bèi"],["信任","xìn rèn"],["信心滿滿","xìn xīn mǎn mǎn"],["陪伴","péi bàn"],["難關","nán guān"],["垂頭喪氣","chuí tóu sàng qì"],["肩膀","jiān bǎng"],["失敗","shī bài"],["可貴","kě guì"],["必須","bì xū"],["勇往直前","yǒng wǎng zhí qián"],["困難","kùn nán"]]},{"n":"04","t":"盤古開天地","w":[["托住","tuō zhù"],["發軟","fā ruǎn"],["劈開","pī kāi"],["斧頭","fǔ tóu"],["山脈","shān mài"],["站穩","zhàn wěn"],["穩定","wěn dìng"],["昏沉沉","hūn chén chén"],["盤古","pán gǔ"]]},{"n":"05","t":"狐假虎威","w":[["餐點","cān diǎn"],["派來","pài lái"],["大喝一聲","dà hē yī shēng"],["尾巴","wěi ba"],["處死","chù sǐ"],["天帝","tiān dì"],["背叛","bèi pàn"],["狐假虎威","hú jiǎ hǔ wēi"],["呆頭呆腦","dāi tóu dāi nǎo"],["狐狸","hú lí"],["一向","yí xiàng"],["膽敢","dǎn gǎn"],["膽子","dǎn zi"],["凶猛","xiōng měng"]]},{"n":"06","t":"我要當海洋家","w":[["而且","ér qiě"],["詳細","xiáng xì"],["科學","kē xué"],["討論","tǎo lùn"],["研究","yán jiū"],["專家","zhuān jiā"],["道理","dào lǐ"],["面貌","miàn mào"],["了解","liǎo jiě"],["進入","jìn rù"],["沙灘","shā tān"]]},{"n":"07","t":"老虎與老鼠","w":[["大貓","dà māo"],["不忍心","bù rěn xīn"],["嘆氣","tàn qì"],["驚嚇","jīng xià"],["隱士","yǐn shì"],["飢餓","jī è"],["寓言","yù yán"],["欺侮","qī wǔ"],["茅屋","máo wū"],["全身發抖","quán shēn fā dǒu"]]},{"n":"08","t":"美麗的水燈節","w":[["消失","xiāo shī"],["點燃","diǎn rán"],["心願","xīn yuàn"],["河神","hé shén"],["中央","zhōng yāng"],["雙手合十","shuāng shǒu hé shí"],["保佑","bǎo yòu"],["蠟燭","là zhú"],["蓮花","lián huā"],["災難","zāi nán"],["花瓣","huā bàn"],["未來","wèi lái"],["祭拜","jì bài"]]},{"n":"09","t":"海底世界","w":[["附近","fù jìn"],["珊瑚","shān hú"],["海草","hǎi cǎo"],["神祕","shén mì"],["幽暗","yōu àn"],["來來往往","lái lái wǎng wǎng"],["奇異","qí yì"],["平靜","píng jìng"],["怪客","guài kè"],["海葵","hǎi kuí"],["海藻","hǎi zǎo"],["小丑","xiǎo chǒu"],["博物館","bó wù guǎn"]]},{"n":"10","t":"孔子談孝","w":[["孝順","xiào shùn"],["態度","tài dù"],["擔心","dān xīn"],["喝酒","hē jiǔ"],["萬世師表","wàn shì shī biǎo"],["尊稱","zūn chēng"],["高尚","gāo shàng"],["孔子","kǒng zi"],["大臣","dà chén"],["和顏悅色","hé yán yuè sè"],["政治","zhèng zhì"]]},{"n":"11","t":"萊特兄弟","w":[["揮舞","huī wǔ"],["橡皮筋","xiàng pí jīn"],["開心","kāi xīn"],["奇妙","qí miào"],["駕著","jià zhù"],["念念不忘","niàn niàn bù wàng"],["嘗試","cháng shì"],["困難","kùn nán"],["熱鬧","rè nào"],["夢想","mèng xiǎng"],["吸引","xī yǐn"]]},{"n":"12","t":"不賣假漆的人","w":[["樂意","lè yì"],["收買","shōu mǎi"],["騙子","piàn zi"],["法子","fǎ zi"],["零賣","líng mài"],["信用","xìn yòng"],["商人","shāng rén"],["乾脆","qián cuì"],["欺騙","qī piàn"],["滿臉通紅","mǎn liǎn tōng hóng"],["一聲不響","yī shēng bù xiǎng"],["原料","yuán liào"]]},{"n":"13","t":"採草莓","w":[["季節","jì jié"],["品嘗","pǐn cháng"],["害羞","hài xiū"],["新鮮","xīn xiān"],["一籃","yī lán"],["春風","chūn fēng"],["躲藏","duǒ cáng"],["交談","jiāo tán"],["春陽","chūn yáng"],["酸甜","suān tián"],["經驗","jīng yàn"],["探頭","tàn tóu"]]},{"n":"14","t":"小人國遊記","w":[["英國","yīng guó"],["風浪","fēng làng"],["幸好","xìng hǎo"],["一切","yī qiè"],["弓箭","gōng jiàn"],["四周","sì zhōu"],["參觀","cān guān"],["綁起來","bǎng qǐ lái"],["告別","gào bié"],["老實","lǎo shí"],["王宮","wáng gōng"],["海島","hǎi dǎo"],["坐船","zuò chuán"]]},{"n":"15","t":"看鱷魚表演","w":[["鴉雀無聲","yā què wú shēng"],["一共","yī gòng"],["一陣","yī zhèn"],["散步","sàn bù"],["突然","tū rán"],["觀賞","guān shǎng"],["全場","quán chǎng"],["不斷","bù duàn"],["出汗","chū hàn"],["鈔票","chāo piào"],["牽著","qiān zhù"],["異口同聲","yì kǒu tóng shēng"]]}]},{"n":"四年級下冊","L":[{"n":"01","t":"參觀育幼院","w":[["孤兒","gū ér"],["伸出","shēn chū"],["保母","bǎo mǔ"],["浮現","fú xiàn"],["撲在","pū zài"],["愛護","ài hù"],["渴望","kě wàng"],["參觀","cān guān"],["育幼院","yù yòu yuàn"],["衣角","yī jiǎo"],["看待","kàn dài"],["響起","xiǎng qǐ"],["關心","guān xīn"],["呼喚","hū huàn"],["腦海","nǎo hǎi"]]},{"n":"02","t":"中秋賞月","w":[["清茶","qīng chá"],["高空","gāo kōng"],["談天","tán tiān"],["萬條","wàn tiáo"],["一輪明月","yī lún míng yuè"],["熱飲","rè yǐn"],["銀光","yín guāng"],["嘗美食","cháng měi shí"],["但願","dàn yuàn"],["既有","jì yǒu"],["團圓","tuán yuán"],["人聲息","rén shēng xī"],["搖動","yáo dòng"],["靜靜","jìng jìng"]]},{"n":"03","t":"夸父追日","w":[["全身","quán shēn"],["可惜","kě xī"],["身材","shēn cái"],["巨人族","jù rén zú"],["南邊","nán biān"],["傳說","chuán shuō"],["決定","jué dìng"],["準備","zhǔn bèi"],["英雄","yīng xióng"],["抬頭","tái tóu"],["木棒","mù bàng"],["一片森林","yī piàn sēn lín"],["丟掉","diū diào"],["狂風","kuáng fēng"]]},{"n":"04","t":"兩個和尚","w":[["靠著","kào zhù"],["富有","fù yǒu"],["皇天不負苦心人","huáng tiān bù fù kǔ xīn rén"],["粗糙","cū cāo"],["化緣","huà yuán"],["有錢","yǒu qián"],["取經","qǔ jīng"],["千辛萬苦","qiān xīn wàn kǔ"],["千山萬水","qiān shān wàn shuǐ"],["木杖","mù zhàng"],["皇天","huáng tiān"]]},{"n":"05","t":"誠實","w":[["誠實","chéng shí"],["錯誤","cuò wù"],["磊落","lěi luò"],["馬虎","mǎ hǔ"],["尊敬","zūn jìng"],["信任","xìn rèn"],["坦白","tǎn bái"],["說謊","shuō huǎng"]]},{"n":"06","t":"李冰治水","w":[["兩岸","liǎng àn"],["荒地","huāng dì"],["淹沒","yān méi"],["鬧水災","nào shuǐ zāi"],["水溝","shuǐ gōu"],["損失","sǔn shī"],["分水堤","fēn shuǐ dī"],["積雪","jī xuě"]]},{"n":"07","t":"泰國的水果","w":[["獨特","dú tè"],["掩著","yǎn zhù"],["波羅蜜","bō luó mì"],["十斤","shí jīn"],["紅毛丹","hóng máo dān"],["短蒂","duǎn dì"],["神奇","shén qí"],["營養","yíng yǎng"],["觀光客","guān guāng kè"],["土壤","tǔ rǎng"],["榴槤","liú lián"],["果后","guǒ hòu"]]},{"n":"08","t":"發明電話的故事","w":[["另外","lìng wài"],["聾啞","lóng yǎ"],["電路","diàn lù"],["吃了一驚","chī le yī jīng"],["專家","zhuān jiā"],["藥水","yào shuǐ"],["實驗","shí yàn"],["疲倦","pí juàn"],["瞌睡","kē shuì"],["電報","diàn bào"],["仍然","réng rán"],["輸送","shū sòng"],["助手","zhù shǒu"]]},{"n":"09","t":"古詩兩首","w":[["疑是","yí shì"],["借問","jiè wèn"],["遙指","yáo zhǐ"],["杏花村","xìng huā cūn"],["清明時節","qīng míng shí jié"],["紛紛","fēn fēn"],["床前","chuáng qián"],["斷魂","duàn hún"],["何處有","hé chù yǒu"],["牧童","mù tóng"],["舉頭","jǔ tóu"]]},{"n":"10","t":"阿里山上看日出","w":[["雲海","yún hǎi"],["辨認","biàn rèn"],["金光閃閃","jīn guāng shǎn shǎn"],["綿羊","mián yáng"],["明朗","míng lǎng"],["浪花","làng huā"],["日出","rì chū"],["簡便","jiǎn biàn"],["湧起","yǒng qǐ"],["服務員","fú wù yuán"],["緊張","jǐn zhāng"],["登場","dēng chǎng"],["擠滿","jǐ mǎn"],["等待","děng dài"],["旅社","lǚ shè"],["閃耀","shǎn yào"]]},{"n":"11","t":"看海","w":[["濺起","jiàn qǐ"],["圍繞","wéi rào"],["鱗片","lín piàn"],["海闊天空","hǎi kuò tiān kōng"],["齊頭並進","qí tóu bìng jìn"],["旅行團","lǚ xíng tuán"],["一列","yī liè"],["廣闊","guǎng kuò"],["展現","zhǎn xiàn"],["怪獸","guài shòu"],["勇士","yǒng shì"],["巨人","jù rén"],["恐怕","kǒng pà"],["煙霧","yān wù"],["海灘","hǎi tān"]]},{"n":"12","t":"和氣的李先生","w":[["眼淚","yǎn lèi"],["難道","nán dào"],["佩服","pèi fú"],["口袋","kǒu dài"],["鄰居","lín jū"],["燙傷","tàng shāng"],["不順心","bù shùn xīn"],["脾氣","pí qì"],["掏出","tāo chū"],["迎面","yíng miàn"],["連聲","lián shēng"],["稀奇","xī qí"],["隨便","suí biàn"],["袖子","xiù zi"],["撞上","zhuàng shàng"],["餐廳","cān tīng"],["態度","tài dù"],["和氣","hé qì"]]},{"n":"13","t":"勤勞和懶惰","w":[["減少","jiǎn shǎo"],["後悔","hòu huǐ"],["產品","chǎn pǐn"],["苦頭","kǔ tóu"],["滋味","zī wèi"],["收穫","shōu huò"],["成績","chéng jī"],["豐富","fēng fù"],["粗陋","cū lòu"],["古今中外","gǔ jīn zhōng wài"],["吃盡","chī jǐn"],["愚笨","yú bèn"],["懶惰","lǎn duò"],["凡是","fán shì"]]},{"n":"14","t":"淡水河","w":[["暮色","mù sè"],["廣大","guǎng dà"],["青苔","qīng tái"],["茫茫","máng máng"],["淡水河","dàn shuǐ hé"],["映照","yìng zhào"],["夕陽","xī yáng"],["凝視","níng shì"],["銀色","yín sè"],["邊緣","biān yuán"],["閃耀","shǎn yào"],["金色","jīn sè"],["晚霞","wǎn xiá"],["奮勉","fèn miǎn"],["氣息","qì xī"],["安詳","ān xiáng"]]},{"n":"15","t":"泰北是我的家鄉","w":[["組成","zǔ chéng"],["撤退","chè tuì"],["玫瑰","méi guī"],["開墾","kāi kěn"],["家鄉","jiā xiāng"],["滿足","mǎn zú"],["提供","tí gōng"],["增加","zēng jiā"],["福氣","fú qì"],["熱鬧","rè nào"],["清邁","qīng mài"],["撫養","fǔ yǎng"],["定居","dìng jū"],["湖邊","hú biān"],["結束","jié shù"]]}]},{"n":"五年級上冊","L":[{"n":"01","t":"借書","w":[["臨時","lín shí"],["便條","biàn tiáo"],["可惜","kě xī"],["抱歉","bào qiàn"],["安徒生","ān tú shēng"],["精彩","jīng cǎi"],["順便","shùn biàn"]]},{"n":"02","t":"爬山","w":[["仰望","yǎng wàng"],["衰退","shuāi tuì"],["後悔","hòu huǐ"],["征服","zhēng fú"],["作證","zuò zhèng"],["艱難","jiān nán"],["軟弱","ruǎn ruò"],["諾言","nuò yán"],["高昂","gāo áng"]]},{"n":"03","t":"有價值的想法","w":[["印刷","yìn shuā"],["牛痘","niú dòu"],["世紀","shì jì"],["預防","yù fáng"],["例子","lì zi"]]},{"n":"04","t":"有趣的年畫","w":[["民俗","mín sú"],["環境","huán jìng"],["娶親","qǔ qīn"],["吉祥","jí xiáng"],["藝術","yì shù"],["鬼神","guǐ shén"],["梅花","méi huā"],["熟悉","shú xī"],["多采多姿","duō cǎi duō zī"],["歷史","lì shǐ"],["代表","dài biǎo"],["圖案","tú àn"],["賞心悅目","shǎng xīn yuè mù"]]},{"n":"05","t":"不迷路的鴿子","w":[["籠子","lóng zi"],["傍晚","bàng wǎn"],["小心翼翼","xiǎo xīn yì yì"],["迷路","mí lù"],["判斷","pàn duàn"],["位置","wèi zhì"],["陌生","mò shēng"],["夥伴","huǒ bàn"],["屋頂","wū dǐng"],["振動","zhèn dòng"],["鴿子","gē zi"]]},{"n":"06","t":"大自然的雕刻家","w":[["雞鴨","jī yā"],["王冠","wáng guān"],["側面","cè miàn"],["經年累月","jīng nián lèi yuè"],["台灣","tái wān"],["崩落","bēng luò"],["舊的","jiù de"],["潔白如玉","jié bái rú yù"],["寶藏","bǎo cáng"],["沖擊","chōng jī"],["岩石","yán shí"],["雕刻","diāo kè"],["野柳","yě liǔ"]]},{"n":"07","t":"爺爺的軍裝照片","w":[["回憶","huí yì"],["打敗","dǎ bài"],["安定","ān dìng"],["深坑","shēn kēng"],["好奇","hào qí"],["打仗","dǎ zhàng"],["模糊","mó hú"],["游擊隊","yóu jī duì"],["戰爭","zhàn zhēng"],["結束","jié shù"],["共產黨","gòng chǎn dǎng"]]},{"n":"08","t":"代父從軍","w":[["打勝仗","dǎ shèng zhàng"],["感激","gǎn jī"],["團聚","tuán jù"],["交戰","jiāo zhàn"],["敵人","dí rén"],["智勇雙全","zhì yǒng shuāng quán"],["功夫","gōng fu"],["出色","chū sè"],["稱讚","chēng zàn"],["戰場","zhàn chǎng"],["戰績","zhàn jī"],["女扮男裝","nǚ bàn nán zhuāng"],["命令","mìng lìng"]]},{"n":"09","t":"大河和大海","w":[["歌頌","gē sòng"],["淹沒","yān méi"],["眼界","yǎn jiè"],["格外","gé wài"],["邊際","biān jì"],["渺小","miǎo xiǎo"],["滔滔","tāo tāo"],["宏偉","hóng wěi"],["謙卑","qiān bēi"],["氣象","qì xiàng"],["愉快","yú kuài"],["阻擋","zǔ dǎng"],["謙虛","qiān xū"],["閉口","bì kǒu"]]},{"n":"10","t":"猜謎語","w":[["薄膜","báo mó"],["麻衣服","má yī fú"],["鳥窩","niǎo wō"],["花生仁","huā shēng rén"],["花生殼","huā shēng ké"],["紅帳","hóng zhàng"],["猜謎語","cāi mí yǔ"],["聚集","jù jí"],["南洋","nán yáng"]]},{"n":"11","t":"天資與努力","w":[["天資","tiān zī"],["挫折","cuò zhé"],["驕傲","jiāo ào"],["專心","zhuān xīn"],["敬佩","jìng pèi"],["值得","zhí de"],["富強安樂","fù qiáng ān lè"],["倘若","tǎng ruò"],["比較","bǐ jiào"],["推翻","tuī fān"],["建造","jiàn zào"],["證明","zhèng míng"],["效果","xiào guǒ"]]},{"n":"12","t":"三個和尚的故事","w":[["水桶","shuǐ tǒng"],["絲瓜","sī guā"],["小廟","xiǎo miào"],["挑水","tiāo shuǐ"],["劇終","jù zhōng"],["負責","fù zé"],["紫色","zǐ sè"],["魔術","mó shù"],["水缸","shuǐ gāng"]]},{"n":"13","t":"我讀一本書","w":[["反而","fǎn ér"],["詩集","shī jí"],["榜樣","bǎng yàng"],["雄壯","xióng zhuàng"],["奮鬥","fèn dòu"],["晝夜","zhòu yè"],["詩篇","shī piān"],["啟示","qǐ shì"],["贈送","zèng sòng"],["嘹亮","liáo liàng"]]},{"n":"14","t":"大家一起來運動","w":[["太極拳","tài jí quán"],["顯身手","xiǎn shēn shǒu"],["晨光","chén guāng"],["扭腰","niǔ yāo"],["徐徐","xú xú"],["和暢","hé chàng"],["肌膚","jī fū"],["褐色","hè sè"],["神采","shén cǎi"],["飛揚","fēi yáng"]]},{"n":"15","t":"受人尊敬的泰皇","w":[["改善","gǎi shàn"],["訪問","fǎng wèn"],["偏遠","piān yuǎn"],["提煉","tí liàn"],["毒品","dú pǐn"],["普遍","pǔ biàn"],["技能","jì néng"],["歌曲","gē qǔ"],["愛戴","ài dài"],["貧窮","pín qióng"],["彈奏","dàn zòu"]]}]},{"n":"五年級下冊","L":[{"n":"01","t":"求學與做人","w":[["總之","zǒng zhī"],["狹窄","xiá zhǎi"],["範圍","fàn wéi"],["影響","yǐng xiǎng"],["虛假","xū jiǎ"],["發揮","fā huī"],["雇用","gù yòng"],["馬馬虎虎","mǎ mǎ hǔ hǔ"],["豐富","fēng fù"],["獲得","huò dé"],["其實","qí shí"],["草率","cǎo shuài"],["見聞","jiàn wén"],["擁有","yōng yǒu"],["講授","jiǎng shòu"],["學識","xué shí"]]},{"n":"02","t":"珍惜時間","w":[["蹉跎","cuō tuó"],["等待","děng dài"],["春去冬來","chūn qù dōng lái"],["珍惜","zhēn xī"],["可惜","kě xī"]]},{"n":"03","t":"惜字亭","w":[["隨意","suí yì"],["肩膀","jiān bǎng"],["街頭巷尾","jiē tóu xiàng wěi"],["資源回收","zī yuán huí shōu"],["福氣","fú qì"],["製造","zhì zào"],["專門","zhuān mén"],["模型","mó xíng"],["輕煙","qīng yān"],["泥爐","ní lú"],["羨慕","xiàn mù"],["再生","zài shēng"],["數量","shù liàng"]]},{"n":"04","t":"竹頭木屑","w":[["鋪在","pù zài"],["廢料","fèi liào"],["木屑","mù xiè"],["融化","róng huà"],["朝廷","cháo tíng"],["用剩","yòng shèng"],["亭子","tíng zi"],["戰船","zhàn chuán"],["鋸木頭","jù mù tóu"],["一頭霧水","yī tóu wù shuǐ"],["摔跤","shuāi jiāo"],["釘子","dīng zi"],["儲存","chǔ cún"],["工匠","gōng jiàng"],["用途","yòng tú"]]},{"n":"05","t":"種子的力量","w":[["悲哀","bēi āi"],["磨練","mó liàn"],["瓦片","wǎ piàn"],["小縫","xiǎo fèng"],["勇往直前","yǒng wǎng zhí qián"],["阻力","zǔ lì"],["存在","cún zài"],["成長","chéng zhǎng"],["大力士","dà lì shì"],["耐性","nài xìng"],["超越","chāo yuè"],["阻擋","zǔ dǎng"],["不可思議","bù kě sī yì"],["顯現","xiǎn xiàn"],["鬥志","dòu zhì"],["達到","dá dào"]]},{"n":"06","t":"草原風光","w":[["雪皓皓","xuě hào hào"],["似雪亮","shì xuě liàng"],["成群","chéng qún"],["長鞭","zhǎng biān"],["成千上萬","chéng qiān shàng wàn"],["中華","zhōng huá"],["滾滾江水","gǔn gǔn jiāng shuǐ"],["山坡","shān pō"],["山岡","shān gāng"],["意氣揚","yì qì yáng"],["潔白","jié bái"],["奔馳如電","bēn chí rú diàn"],["雄壯","xióng zhuàng"],["夕陽","xī yáng"],["山蒼蒼","shān cāng cāng"]]},{"n":"07","t":"泰國潑水節","w":[["觀光客","guān guāng kè"],["象徵","xiàng zhēng"],["煙火","yān huǒ"],["繞著","rào zhù"],["祈求","qí qiú"],["傳統","chuán tǒng"],["即將","jí jiāng"],["慶祝","qìng zhù"],["祭拜","jì bài"],["沾水","zhān shuǐ"],["長輩","zhǎng bèi"],["溼淋淋","shī lín lín"],["各式各樣","gè shì gè yàng"],["潑水節","pō shuǐ jié"],["方式","fāng shì"]]},{"n":"08","t":"晏子使楚","w":[["相待","xiāng dài"],["規矩","guī jǔ"],["不慌不忙","bù huāng bù máng"],["派人","pài rén"],["嘲弄","cháo nòng"],["矮小","ǎi xiǎo"],["接待","jiē dài"],["面不改色","miàn bù gǎi sè"],["面積","miàn jī"],["口才","kǒu cái"],["敝國","bì guó"],["巧妙","qiǎo miào"],["改變","gǎi biàn"],["吩咐","fēn fù"]]},{"n":"09","t":"孫悟空三借芭蕉扇","w":[["著名","zhù míng"],["芭蕉扇","bā jiāo shàn"],["牛魔王","niú mó wáng"],["火焰","huǒ yàn"],["打聽","dǎ tīng"],["搧熄","shān xī"],["茶杯","chá bēi"],["唐三藏","táng sān zàng"],["收成","shōu chéng"],["孫悟空","sūn wù kōng"],["半醉","bàn zuì"],["收藏","shōu cáng"],["鐵扇公主","tiě shàn gōng zhǔ"],["原形","yuán xíng"]]},{"n":"10","t":"孔明借箭","w":[["智慧","zhì huì"],["嫉妒","jí dù"],["計謀","jì móu"],["為難","wèi nán"],["萬一","wàn yī"],["抵抗","dǐ kàng"],["中計","zhōng jì"],["士兵","shì bīng"],["料定","liào dìng"],["神機妙算","shén jī miào suàn"],["感嘆","gǎn tàn"],["多疑","duō yí"],["繩子","shéng zi"],["賜箭","cì jiàn"],["紛紛","fēn fēn"],["按兵不動","àn bīng bù dòng"]]},{"n":"11","t":"不能只靠聰明","w":[["前途","qián tú"],["天資","tiān zī"],["必須","bì xū"],["敘述","xù shù"],["見聞","jiàn wén"],["敏捷","mǐn jié"],["宴會","yàn huì"],["神童","shén tóng"],["成就","chéng jiù"],["據說","jù shuō"],["無可限量","wú kě xiàn liàng"],["名聲","míng shēng"],["賞識","shǎng shí"]]},{"n":"12","t":"萬里長城","w":[["歷經","lì jīng"],["鎮守","zhèn shǒu"],["手執長劍","shǒu zhí zhǎng jiàn"],["平原","píng yuán"],["一望無際","yī wàng wú jì"],["保衛","bǎo wèi"],["橫跨","héng kuà"],["光榮","guāng róng"],["雄偉","xióng wěi"],["遙遠","yáo yuǎn"],["崇山峻嶺","chóng shān jùn lǐng"],["盤旋","pán xuán"]]},{"n":"13","t":"參觀故宮博物院","w":[["建築","jiàn zhù"],["青銅器","qīng tóng qì"],["細緻","xì zhì"],["盯著","dīng zhù"],["心血","xīn xuè"],["宮殿","gōng diàn"],["目瞪口呆","mù dèng kǒu dāi"],["念念不忘","niàn niàn bù wàng"],["記載","jì zài"],["雕琢","diāo zhuó"],["菜梗","cài gěng"],["讚不絕口","zàn bù jué kǒu"],["藝術","yì shù"],["趴著","pā zhù"],["收藏","shōu cáng"]]},{"n":"14","t":"有趣的中國字","w":[["提筆","tí bǐ"],["盒蓋","hé gài"],["神童","shén tóng"],["隔壁","gé bì"],["酥糖","sū táng"],["使勁","shǐ jìn"],["客氣","kè qì"],["過人","guò rén"],["掉頭就走","diào tóu jiù zǒu"],["斧頭","fǔ tóu"],["宰相","zǎi xiàng"],["更糟","gèng zāo"],["二話不說","èr huà bù shuō"]]},{"n":"15","t":"金三角","w":[["禁止","jìn zhǐ"],["麻醉","má zuì"],["面黃肌廋","miàn huáng jī sōu"],["銷售","xiāo shòu"],["觸目驚心","chù mù jīng xīn"],["觀光勝地","guān guāng shèng dì"],["交會","jiāo huì"],["搖身一變","yáo shēn yī biàn"],["湄公河","méi gōng hé"],["罌粟","yīng sù"],["戒掉","jiè diào"]]}]},{"n":"六年級上冊","L":[{"n":"01","t":"讚美的話","w":[["遭受","zāo shòu"],["角度","jiǎo dù"],["一般","yì bān"],["毒蛇","dú shé"],["友誼","yǒu yì"],["優點","yōu diǎn"],["謙虛有禮","qiān xū yǒu lǐ"],["溫馨","wēn xīn"],["綻放","zhàn fàng"],["批評","pī píng"],["榜樣","bǎng yàng"]]},{"n":"02","t":"父母的智慧","w":[["富裕","fù yù"],["孟子","mèng zi"],["莖桿","jīng gǎn"],["歌頌","gē sòng"],["孟母","mèng mǔ"],["孟母三遷","mèng mǔ sān qiān"],["一盞","yī zhǎn"],["延續","yán xù"],["多慮","duō lǜ"],["不辭辛勞","bù cí xīn láo"],["至愛","zhì ài"],["錦衣玉食","jǐn yī yù shí"],["奢侈","shē chǐ"],["深謀遠慮","shēn móu yuǎn lǜ"]]},{"n":"03","t":"自由女神","w":[["地標","dì biāo"],["鎖鍊","suǒ liàn"],["渴望","kě wàng"],["長袍","zhǎng páo"],["壓迫","yā pò"],["渡輪","dù lún"],["骨幹","gǔ gàn"],["支柱","zhī zhù"],["風采","fēng cǎi"],["獨立","dú lì"],["銅板","tóng bǎn"],["火炬","huǒ jù"],["乘坐","chéng zuò"]]},{"n":"04","t":"江南風光","w":[["斜陽","xié yáng"],["搖曳","yáo yè"],["一疊疊","yī dié dié"],["倒映","dào yìng"],["玻璃","bō lí"],["漁船","yú chuán"],["扁舟","piān zhōu"],["淘米","táo mǐ"],["碧綠","bì lǜ"],["餵雞","wèi jī"]]},{"n":"05","t":"有趣的諺語","w":[["免討","miǎn tǎo"],["何況","hé kuàng"],["心肝","xīn gān"],["皮襖","pí ǎo"],["鋤頭","chú tóu"],["貴州","guì zhōu"],["沙漠","shā mò"],["瀑布","pù bù"],["苗族","miáo zú"],["諺語","yàn yǔ"],["迎賓","yíng bīn"]]},{"n":"06","t":"知識的寶庫","w":[["複雜","fù zá"],["隆起","lóng qǐ"],["揭開","jiē kāi"],["紋路","wén lù"],["或者","huò zhě"],["奧秘","ào mì"],["山谷","shān gǔ"],["鼓舞","gǔ wǔ"],["凝結","níng jié"],["鋒利","fēng lì"],["寧靜","níng jìng"]]},{"n":"07","t":"飲水思源","w":[["摩托車","mó tuō chē"],["相差","xiāng chà"],["支付","zhī fù"],["補充","bǔ chōng"],["公里","gōng lǐ"],["寬敞","kuān chǎng"],["姿態","zī tài"],["鮮豔","xiān yàn"],["不急不緩","bù jí bù huǎn"],["招展","zhāo zhǎn"],["政府","zhèng fǔ"],["通訊","tōng xùn"],["修築","xiū zhù"],["飲水思源","yǐn shuǐ sī yuán"],["混合","hùn hé"],["寬廣平坦","kuān guǎng píng tǎn"]]},{"n":"08","t":"古詩兩首","w":[["瑤台","yáo tái"],["盛開","shèng kāi"],["幾度","jǐ dù"],["語譯","yǔ yì"],["收拾","shōu shí"],["描寫","miáo xiě"],["莫名其妙","mò míng qí miào"],["詩題","shī tí"],["推敲","tuī qiāo"],["押韻","yā yùn"]]},{"n":"09","t":"關心別人","w":[["教誨","jiào huì"],["疾病","jí bìng"],["病患","bìng huàn"],["既然","jì rán"],["保衛","bǎo wèi"],["診治","zhěn zhì"],["搭車","dā chē"],["軍警","jūn jǐng"],["健全","jiàn quán"]]},{"n":"10","t":"木碗","w":[["筷子","kuài zi"],["視線","shì xiàn"],["嫌棄","xián qì"],["模糊","mó hú"],["湯匙","tāng shi"],["心肝寶貝","xīn gān bǎo bèi"],["不禁","bù jīn"],["示範","shì fàn"],["重聽","zhòng tīng"],["搖晃","yáo huǎng"],["爐邊","lú biān"],["餓扁","è biǎn"],["媳婦","xí fù"]]},{"n":"11","t":"少年時代的史懷哲","w":[["上風","shàng fēng"],["尊稱","zūn chēng"],["治療","zhì liáo"],["較量","jiào liàng"],["非洲","fēi zhōu"],["悠揚","yōu yáng"],["高薪","gāo xīn"],["蠻荒","mán huāng"],["奉獻","fèng xiàn"],["疾病","jí bìng"],["情操","qíng cāo"],["角力","jué lì"],["聚精會神","jù jīng huì shén"],["瞄準","miáo zhǔn"],["悲天憫人","bēi tiān mǐn rén"],["享受","xiǎng shòu"],["衣食無缺","yī shí wú quē"],["彈弓","dàn gōng"],["灰塵","huī chén"]]},{"n":"12","t":"無信不立","w":[["約定","yuē dìng"],["無故","wú gù"],["敷衍","fū yǎn"],["尊重","zūn zhòng"],["遲遲","chí chí"],["譬如","pì rú"],["花言巧語","huā yán qiǎo yǔ"],["立足","lì zú"],["印象","yìn xiàng"],["駟馬","sì mǎ"],["誠意","chéng yì"],["誇耀","kuā yào"],["鄙棄","bǐ qì"],["終究","zhōng jiū"],["缺乏","quē fá"]]},{"n":"13","t":"驪山烽火","w":[["侵犯","qīn fàn"],["點燃","diǎn rán"],["寵愛","chǒng ài"],["千依百順","qiān yī bǎi shùn"],["默默","mò mò"],["諸侯","zhū hóu"],["絲綢","sī chóu"],["任憑","rèn píng"],["進諫","jìn jiàn"],["撕開","sī kāi"],["戲弄","xì nòng"]]},{"n":"14","t":"模仿貓","w":[["玉蜀黍","yù shǔ shǔ"],["文雅","wén yǎ"],["鬍子","hú zi"],["稻穀","dào gǔ"],["尤其","yóu qí"],["夾著","jiā zhù"],["羊欄","yáng lán"],["雞棚","jī péng"],["膝前","xī qián"],["模仿","mó fǎng"]]},{"n":"15","t":"只要讀不要毒","w":[["誘惑","yòu huò"],["援手","yuán shǒu"],["慘痛","cǎn tòng"],["控制","kòng zhì"],["沐浴","mù yù"],["惡魔","è mó"],["下降","xià jiàng"],["暫時","zàn shí"],["掌控","zhǎng kòng"],["無惡不作","wú è bù zuò"],["上癮","shàng yǐn"]]}]},{"n":"六年級下冊","L":[{"n":"01","t":"新的意義","w":[["技巧","jì qiǎo"],["來源","lái yuán"],["創造","chuàng zào"],["過程","guò chéng"],["威武不屈","wēi wǔ bù qū"],["體會","tǐ huì"],["麥子","mài zi"],["形象","xíng xiàng"],["撒播","sǎ bō"],["出版","chū bǎn"],["環境","huán jìng"],["出爐","chū lú"],["不妨","bù fáng"],["憑空","píng kōng"],["含義","hán yì"],["新苗","xīn miáo"],["觀察","guān chá"],["延續","yán xù"]]},{"n":"02","t":"最好聽的聲音","w":[["聲勢","shēng shì"],["尋找","xún zhǎo"],["靈光一閃","líng guāng yī shǎn"],["著急","zhù jí"],["呼喚","hū huàn"],["霞光","xiá guāng"],["悅耳","yuè ěr"],["好奇心","hào qí xīn"],["美妙","měi miào"],["雄壯","xióng zhuàng"],["雷鳴","léi míng"],["關懷","guān huái"],["迴盪","huí dàng"],["似乎","sì hū"],["電流","diàn liú"],["林梢","lín shāo"]]},{"n":"03","t":"哀傷不是一帖良藥","w":[["圍籬","wéi lí"],["型態","xíng tài"],["孤獨","gū dú"],["綻開","zhàn kāi"],["失望","shī wàng"],["拂面","fú miàn"],["挫敗","cuò bài"],["芬芳","fēn fāng"],["祝福","zhù fú"],["傷痕","shāng hén"],["何妨","hé fáng"],["良藥","liáng yào"],["哀傷","āi shāng"],["一帖","yī tiē"],["寂寞","jì mò"],["聆聽","líng tīng"],["遺忘","yí wàng"]]},{"n":"04","t":"談敦親睦鄰","w":[["觀念","guān niàn"],["結構","jié gòu"],["和睦","hé mù"],["援手","yuán shǒu"],["給予","gěi yǔ"],["鞭長莫及","biān zhǎng mò jí"],["遠親不如近鄰","yuǎn qīn bù rú jìn lín"],["敦親","dūn qīn"],["不僅","bù jǐn"],["及時","jí shí"],["所謂","suǒ wèi"],["興旺","xìng wàng"],["倫理","lún lǐ"],["患難與共","huàn nán yǔ gòng"],["冷漠","lěng mò"],["敦親睦鄰","dūn qīn mù lín"],["淡薄","dàn bó"]]},{"n":"05","t":"美言一句三冬暖","w":[["誤會","wù huì"],["適時","shì shí"],["疏失","shū shī"],["激起","jī qǐ"],["野兔","yě tù"],["修養","xiū yǎng"],["顧及","gù jí"],["關係","guān xì"],["訓練","xùn liàn"],["恰好","qià hǎo"],["風度","fēng dù"],["簡單","jiǎn dān"],["誠懇","chéng kěn"],["設想","shè xiǎng"],["工具","gōng jù"]]},{"n":"06","t":"一束鮮花","w":[["煥然一新","huàn rán yī xīn"],["雜草","zá cǎo"],["習慣","xí guàn"],["討厭","tǎo yàn"],["強烈","qiáng liè"],["灌了水","guàn le shuǐ"],["更新","gēng xīn"],["塵封","chén fēng"],["欣賞","xīn shǎng"],["洗臉","xǐ liǎn"],["對比","duì bǐ"],["環顧","huán gù"],["堆滿","duī mǎn"],["相稱","xiāng chēng"],["舒暢","shū chàng"],["恰當","qià dāng"],["一束","yī shù"],["調和","diào hé"]]},{"n":"07","t":"成語故事","w":[["塞翁","sāi wēng"],["安慰","ān wèi"],["也許","yě xǔ"],["冒出","mào chū"],["扔掉","rēng diào"],["道賀","dào hè"],["驚慌","jīng huāng"],["鄉親","xiāng qīn"],["禍事","huò shì"],["跛足","bǒ zú"],["反而","fǎn ér"],["走失","zǒu shī"],["施肥","shī féi"],["枯死","kū sǐ"]]},{"n":"08","t":"泰北是個好地方","w":[["此外","cǐ wài"],["數不盡","shù bù jǐn"],["香脆","xiāng cuì"],["觀光","guān guāng"],["複雜","fù zá"],["民族","mín zú"],["景點","jǐng diǎn"],["介紹","jiè shào"],["妝點","zhuāng diǎn"],["酸辣","suān là"],["放鬆","fàng sōng"],["服飾","fú shì"],["展現","zhǎn xiàn"],["層層疊疊","céng céng dié dié"],["手工藝品","shǒu gōng yì pǐn"]]},{"n":"09","t":"古詩兩首","w":[["桑樹","sāng shù"],["軒窗","xuān chuāng"],["邀請","yāo qǐng"],["菊花","jú huā"],["三春暉","sān chūn huī"],["故人","gù rén"],["菜圃","cài pǔ"],["寸草","cùn cǎo"],["吟詩","yín shī"],["雞黍","jī shǔ"],["遲歸","chí guī"]]},{"n":"10","t":"堅持—給孩子的一封信","w":[["貝多芬","bèi duō fēn"],["依稀","yī xī"],["放棄","fàng qì"],["簡直","jiǎn zhí"],["死刑","sǐ xíng"],["堅持","jiān chí"],["報紙","bào zhǐ"],["擊倒","jī dào"],["宣判","xuān pàn"],["投稿","tóu gǎo"],["忍不住","rěn bú zhù"],["遭遇","zāo yù"],["埋首","mái shǒu"],["退縮","tuì suō"],["悶悶不樂","mèn mèn bù lè"],["孩子","hái zi"],["狂熱","kuáng rè"],["輕言","qīng yán"],["退稿","tuì gǎo"],["發表","fā biǎo"],["打擊","dǎ jī"],["精彩絕倫","jīng cǎi jué lún"]]},{"n":"11","t":"耶誕禮物","w":[["固定","gù dìng"],["耶誕節","yé dàn jié"],["彼此","bǐ cǐ"],["前夕","qián xī"],["家境","jiā jìng"],["解下","jiě xià"],["掏出","tāo chū"],["像樣","xiàng yàng"],["心疼","xīn téng"],["不在意","bù zài yì"],["夫妻","fū qī"],["匆忙","cōng máng"],["一份","yī fèn"],["相配","xiāng pèi"],["擁抱","yōng bào"]]},{"n":"12","t":"水果們的晚會","w":[["指揮","zhǐ huī"],["開場","kāi chǎng"],["合唱","hé chàng"],["裙子","qún zi"],["牛乳","niú rǔ"],["怪模怪樣","guài mó guài yàng"],["翻筋斗","fān jīn dǒu"],["沉睡","chén shuì"],["奇異","qí yì"],["鼓掌","gǔ zhǎng"],["伴奏","bàn zòu"],["晚會","wǎn huì"],["劈啪","pī pā"]]},{"n":"13","t":"發現新大陸的哥倫布","w":[["碼頭","mǎ tóu"],["群眾","qún zhòng"],["衝破","chōng pò"],["判斷","pàn duàn"],["披著","pī zhù"],["交替","jiāo tì"],["羅盤","luó pán"],["駛向","shǐ xiàng"],["茫茫無際","máng máng wú jì"],["三艘","sān sōu"],["風潮","fēng cháo"],["起伏","qǐ fú"],["千篇一律","qiān piān yī lǜ"],["熱烈","rè liè"],["移動","yí dòng"],["見聞錄","jiàn wén lù"],["歐洲","ōu zhōu"],["煩躁","fán zào"],["帶領","dài lǐng"]]},{"n":"14","t":"畢業生致謝詞","w":[["情同手足","qíng tóng shǒu zú"],["浮雲","fú yún"],["討論","tǎo lùn"],["閱讀","yuè dú"],["畢業","bì yè"],["教誨","jiào huì"],["叮嚀","dīng níng"],["命運","mìng yùn"],["各位","gè wèi"],["形容","xíng róng"],["致詞","zhì cí"],["壞習慣","huài xí guàn"],["隆重","lóng zhòng"],["謹記","jǐn jì"]]}]}];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const shuf=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const ALL=[];BOOKS.forEach((b,bi)=>b.L.forEach((l,li)=>l.w.forEach(([w,p])=>ALL.push({w,p,py:p.split(' '),bi,li}))));
+const VW=new Set(ALL.map(x=>x.w)),VP=new Set(ALL.map(x=>x.py.join('')));
+const S={diff:'s',kind:null,book:0,ls:new Set(),rm:'single',bks:new Set()};
+const DIFF={s:{n:'簡單版',N:5,m:1},a:{n:'進階版',N:16,m:1.5},u:{n:'無限版',N:36,m:2}}; // N：簡單版＝詞數；進階／無限＝格子數
+const IDX={c:{},p:{}};{const s=new Set();ALL.forEach(x=>{if(s.has(x.w))return;s.add(x.w);new Set([...x.w]).forEach(ch=>(IDX.c[ch]=IDX.c[ch]||[]).push(x));new Set(x.py).forEach(k=>(IDX.p[k]=IDX.p[k]||[]).push(x))})}
+const keysOf=x=>S.kind=='c'?[...x.w]:x.py,pre=(a,b)=>a.length<=b.length&&a.every((v,i)=>v==b[i]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+/* 國語辭典查詢（萌典 moedict.tw：收錄教育部《重編國語辭典修訂本》，且開放瀏覽器直接查詢） */
+const DC=(()=>{try{return JSON.parse(localStorage.getItem('wg_dict')||'{}')}catch(e){return{}}})();
+const keep=o=>o;
+async function lookup(w){
+ if(w in DC)return DC[w];
+ for(const u of['raw/'+encodeURIComponent(w),'a/'+encodeURIComponent(w)+'.json']){
+  try{const r=await fetch('https://www.moedict.tw/'+u);
+   if(r.ok){const j=await r.json(),d=(j.heteronyms||[]).flatMap(h=>h.definitions||[]).map(f=>f.def).filter(Boolean);
+    return store(w,{ok:true,def:(d[0]||'').replace(/\{\[[0-9a-f]+\]\}/gi,'□')})}}catch(e){}}
+ try{const r=await fetch('https://www.moedict.tw/raw/'+encodeURIComponent('萌'));if(r.ok)return store(w,{ok:false})}catch(e){}
+ return null; // 連不上網路
+}
+function store(w,o){DC[w]=o;try{localStorage.setItem('wg_dict',JSON.stringify(DC))}catch(e){}return o}
+const RK='wg_records',getRecs=()=>{try{return JSON.parse(localStorage.getItem(RK)||'[]')}catch(e){return[]}};
+function saveRec(r){S.rid=r.id;try{localStorage.setItem(RK,JSON.stringify(getRecs().concat([r]).slice(-500)))}catch(e){}}
+const show=id=>{$$('.screen').forEach(s=>s.classList.toggle('on',s.id==id));if(id=='home'&&S.rm=='wrong'){buildWrong();upd()}id=='game'?bgmOn():bgmOff()};
+const valid=(a,b)=>S.kind=='c'?VW.has(a.c+b.c):VP.has(a.p+b.p);
+const lab=t=>S.kind=='c'?t.c:t.p;
+const txt=(a,b)=>S.kind=='c'?a.c+b.c:a.p+' '+b.p;
+
+/* ---------- 選單 ---------- */
+$('#dRow').onclick=e=>{const b=e.target.closest('.opt');if(!b)return;S.diff=b.dataset.d;$$('#dRow .opt').forEach(x=>x.classList.toggle('sel',x==b))};
+$('#kRow').onclick=e=>{const b=e.target.closest('.opt');if(!b)return;S.kind=b.dataset.k;$$('#kRow .opt').forEach(x=>x.classList.toggle('sel',x==b));$('#range').classList.remove('lock');if(!$('#books').children.length)buildBooks();upd()};
+function buildBooks(){$('#books').innerHTML=BOOKS.map((b,i)=>`<button class="bk${i==S.book?' sel':''}" data-i="${i}">${b.n}</button>`).join('');buildLessons();buildComb()}
+$('#books').onclick=e=>{const b=e.target.closest('.bk');if(!b)return;S.book=+b.dataset.i;S.ls=new Set();buildBooks();upd()};
+function buildLessons(){$('#lessons').innerHTML=BOOKS[S.book].L.map((l,i)=>`<label><input type="checkbox" data-i="${i}" ${S.ls.has(i)?'checked':''}> 第${+l.n}課 ${l.t}（${l.w.length}詞）</label>`).join('')}
+$('#lessons').onchange=e=>{const i=+e.target.dataset.i;e.target.checked?S.ls.add(i):S.ls.delete(i);upd()};
+$('#all').onclick=()=>{S.ls=new Set(BOOKS[S.book].L.map((_,i)=>i));buildLessons();upd()};
+$('#none').onclick=()=>{S.ls=new Set();buildLessons();upd()};
+/* 常錯詞彙紀錄（存在瀏覽器，下次開啟仍保留） */
+let WH=(()=>{try{return JSON.parse(localStorage.getItem('wg_wrong')||'{}')}catch(e){return{}}})();
+const saveWH=()=>{try{localStorage.setItem('wg_wrong',JSON.stringify(WH))}catch(e){}};
+const wrongPool=()=>{const s=new Set();return ALL.filter(x=>WH[x.w]>0&&!s.has(x.w)&&s.add(x.w))};
+$('#rm').onclick=e=>{const b=e.target.closest('.bk');if(!b)return;S.rm=b.dataset.m;$$('#rm .bk').forEach(x=>x.classList.toggle('sel',x==b));
+ $('#pS').hidden=S.rm!='single';$('#pC').hidden=S.rm!='combined';$('#pW').hidden=S.rm!='wrong';if(S.rm=='wrong')buildWrong();upd()};
+function buildComb(){$('#cb').innerHTML=BOOKS.map((b,i)=>`<button class="bk${S.bks.has(i)?' sel':''}" data-i="${i}">${b.n}</button>`).join('')}
+$('#cb').onclick=e=>{const b=e.target.closest('.bk');if(!b)return;const i=+b.dataset.i;S.bks.has(i)?S.bks.delete(i):S.bks.add(i);buildComb();upd()};
+$('#cAll').onclick=()=>{S.bks=new Set(BOOKS.map((_,i)=>i));buildComb();upd()};
+$('#cNone').onclick=()=>{S.bks=new Set();buildComb();upd()};
+function buildWrong(){const p=wrongPool().sort((a,b)=>WH[b.w]-WH[a.w]);
+ $('#wl').innerHTML=p.length?p.map(x=>`<span style="display:inline-block;margin:3px;padding:4px 12px;border-radius:10px;background:#ffe0e2"><b>${x.w}</b> <small>${x.p}　×${WH[x.w]}</small></span>`).join(''):'目前沒有常錯詞彙，先到單冊或跨冊玩幾場吧！'}
+$('#wClr').onclick=()=>{if(confirm('確定要清除常錯詞彙紀錄嗎？')){WH={};saveWH();buildWrong();upd()}};
+function upd(){$('#go').disabled=!(S.kind&&(S.rm=='single'?S.ls.size:S.rm=='combined'?S.bks.size:wrongPool().length))}
+const rangeLabel=()=>S.rm=='combined'?'跨冊：'+[...S.bks].sort((a,b)=>a-b).map(i=>BOOKS[i].n).join('、'):S.rm=='wrong'?'常錯詞彙':BOOKS[S.book].n+'｜'+[...S.ls].sort((a,b)=>a-b).map(i=>'第'+(+BOOKS[S.book].L[i].n)+'課').join('、');
+
+/* ---------- 遊戲 ---------- */
+const pName=()=>(window.HY_PLAYER&&HY_PLAYER.get())||'';            // 玩家稱呼（由大廳設定）
+const pCall=()=>{const n=pName();return n?esc(n)+'，':''};          // 對話用：「小明，」
+$('#hi').innerHTML='👋 '+(pName()?esc(pName())+'，歡迎！':'歡迎！')+'今天想挑戰哪一種？';
+function start(){S.name=pName()||'無名氏';
+ Object.assign(S,{lives:5,lv:0,clear:0,ok:0,bad:0,nx:0,extra:[],used:new Set(),miss:{},tries:[],t0:Date.now(),busy:false,drawn:[],hints:0,gs:new Set(),round:1,grNote:''});if(window.RelaxBreak)RelaxBreak.reset();show('game');nextLevel()}
+$('#go').onclick=start;$('#again').onclick=start;
+$('#home2').onclick=$('#quit').onclick=()=>show('home');
+$('#next').onclick=nextLevel;
+
+function buildMulti(N,ord,strict){ // 挑詞讓總字數剛好填滿格子；各詞的字（或拼音）不重複，且不會意外拼出別的課本詞
+ const idx=IDX[S.kind],pk=[],cnt={};let rem=N;
+ for(const c of ord){
+  if(!rem)break;const L=c.w.length;if(L>rem||rem-L==1)continue;const ks=keysOf(c);
+  if(strict){
+   if(ks.some(k=>cnt[k]))continue;
+   ks.forEach(k=>cnt[k]=(cnt[k]||0)+1);
+   const T=new Set(pk.map(x=>x.w));T.add(c.w);let bad=false;
+   for(const k of new Set(ks)){for(const v of idx[k]||[]){if(T.has(v.w))continue;const need={};let ok=1;for(const q of keysOf(v)){need[q]=(need[q]||0)+1;if((cnt[q]||0)<need[q]){ok=0;break}}if(ok){bad=true;break}}if(bad)break}
+   if(bad){ks.forEach(k=>delete cnt[k]);continue}
+  }
+  pk.push(c);rem-=L;
+ }
+ return rem?null:pk;
+}
+function pickItems(N){
+ const sm=S.diff=='s',ok=x=>!sm||x.w.length==2,uniq=a=>{const s=new Set();return a.filter(x=>!s.has(x.w)&&s.add(x.w))};
+ const inScope=x=>S.rm=='single'?((x.bi==S.book&&S.ls.has(x.li))||S.gs.has(x.bi+':'+x.li)):S.rm=='combined'?(S.bks.has(x.bi)||S.gs.has(x.bi+':'+x.li)):WH[x.w]>0;
+ const mk=()=>uniq(ALL.filter(x=>ok(x)&&inScope(x)));let pool=mk();
+ let fresh=pool.filter(x=>!S.used.has(x.w));
+ if(fresh.length<Math.min(sm?N:Math.ceil(N/3),pool.length)){ // 題庫答完一輪：全部重來，並自動補課（往前）／預習（往後）加一課
+  S.used=new Set();S.round++;if(S.rm!='wrong'){const gt=growScope();if(gt){S.grNote='🔄 題庫答完一輪（第 '+S.round+' 輪）｜'+gt;pool=mk()}}fresh=pool}
+ const inP=new Set(pool.map(x=>x.w)),ex=uniq(ALL.filter(x=>ok(x)&&!inP.has(x.w)));
+ const ex1=S.rm=='single'?ex.filter(x=>x.bi==S.book):[],ex2=S.rm=='single'?ex.filter(x=>x.bi!=S.book):ex;
+ const order=()=>(S.rm=='wrong'?fresh.map(x=>[Math.pow(Math.random(),1/WH[x.w]),x]).sort((a,b)=>b[0]-a[0]).map(a=>a[1]):shuf(fresh)).concat(shuf(ex1),shuf(ex2));
+ if(!sm){for(let i=0;i<40;i++){const pk=buildMulti(N,order(),true);if(pk)return pk}return buildMulti(N,order(),false)}
+ const ord=order(),pk=[],u=new Set();
+ for(const c of ord){if(pk.length>=N)break;if(!u.has(c.w)&&clean(pk.concat([c]))){pk.push(c);u.add(c.w)}}
+ return pk;
+}
+function tilesOf(items){const T=[];items.forEach((it,i)=>[...it.w].forEach((ch,j)=>T.push({id:T.length,c:ch,p:it.py[j],tgt:i,pos:j})));return T}
+function clean(pk){ // 確保除了正確配對，不會意外組成別的課本詞語
+ const T=tilesOf(pk);
+ for(const a of T)for(const b of T){if(a==b)continue;
+  if(a.tgt==b.tgt&&a.pos==0&&b.pos==1)continue;
+  if(S.diff=='s'&&!(a.pos==0&&b.pos==1))continue;
+  if(valid(a,b))return false}
+ return true}
+
+function nextLevel(){if(rbHold(()=>nextLevel1()))return;nextLevel1()}
+function nextLevel1(){nextLevel0();if(S.grNote){$('#msg').innerHTML+=(S.diff=='s'?'':'<br>')+S.grNote;S.grNote=''}}
+function nextLevel0(){
+ S.lv++;const N=DIFF[S.diff].N;
+ S.items=pickItems(N);S.T=tilesOf(S.items);S.done=0;S.sel=null;S.seq=[];S.tdone={};S.lock=0;S.conn=[];S.busy=false;S.lvDone=0;$('#draw').innerHTML='';$('#learn').hidden=true;$('#learn').innerHTML='';if(S.diff!='s')S.items.forEach(i=>lookup(i.w));
+ $('#next').hidden=true;$('#lkt').hidden=true;$('#msg').innerHTML=S.diff=='s'?'':'👆 '+pCall()+'依序點字拼成詞語（有 2 個字的，也有 3、4 個字的詞）';$('#done').innerHTML='';
+ const B=$('#board');B.className=S.diff=='s'?'simple':'adv'+(S.diff=='u'?' u':'');
+ const mk=t=>`<button class="tile${S.kind=='p'?' p':''}" data-id="${t.id}">${lab(t)}</button>`;
+ B.innerHTML=S.diff=='s'
+  ?`<svg id="ln"></svg><div class="col">${shuf(S.T.filter(t=>!t.pos)).map(mk).join('')}</div><div class="col">${shuf(S.T.filter(t=>t.pos)).map(mk).join('')}</div>`
+  :shuf(S.T).map(mk).join('');
+ B.onclick=e=>{const b=e.target.closest('.tile');if(b&&!S.busy&&!S.lock&&!b.classList.contains('ok'))clickTile(+b.dataset.id)};
+ hud();updBtns();tchLabel();
+}
+const el=id=>$(`#board [data-id="${id}"]`);
+function hud(){$('#hDraw').textContent='🔥 連勝 '+S.clear+'｜BONUS '+(S.clear%BONUS_EVERY)+' / '+BONUS_EVERY;$('#hLv').textContent='第 '+S.lv+' 關';$('#hPr').textContent='進度 '+S.done+' / '+S.items.length;$('#hLife').textContent='❤️'.repeat(S.lives)+'🤍'.repeat(Math.max(0,5-S.lives))}
+
+function clickTile(id){
+ const t=S.T[id];speakChar(t.c);
+ if(S.diff!='s')return pickSeq(t);
+ if(!S.sel){S.sel=t;el(id).classList.add('on');return}
+ if(S.sel==t){el(id).classList.remove('on');S.sel=null;return}
+ if(S.sel.pos==t.pos){el(S.sel.id).classList.remove('on');S.sel=t;el(id).classList.add('on');return}
+ const a=S.sel;S.sel=null;attempt(a.pos?t:a,a.pos?a:t,a,t);
+}
+async function attempt(x,y,a,b){
+ if(valid(x,y))return good(x,y);
+ if(S.diff=='u'){ // 無限版：課本沒有，再查教育部國語辭典
+  S.busy=true;$('#msg').textContent='🔎 查國語辭典中…';
+  const r=await lookup(x.c+y.c);
+  if(r&&r.ok)return good(x,y,r);
+  if(!r){S.busy=false;[a,b].forEach(t=>el(t.id).classList.remove('on'));$('#msg').textContent='📡 連不上國語辭典，這次不算錯，請檢查網路後再試';return}
+ }
+ S.bad++;S.lives--;rbAns(false);S.busy=true;sfx('bad');
+ [x.tgt,y.tgt].filter((v,i,r)=>r.indexOf(v)==i).forEach(g=>{const w=S.items[g].w;S.miss[w]=(S.miss[w]||0)+1;WH[w]=(WH[w]||0)+1});saveWH();
+ $('#msg').innerHTML='❌ '+pCall()+'課本中沒有這個詞，再想想看！';
+ [a,b].forEach(t=>{const e=el(t.id);e.classList.add('bad');e.classList.remove('on')});hud();
+ setTimeout(()=>{[a,b].forEach(t=>el(t.id)&&el(t.id).classList.remove('bad'));S.busy=false;if(S.lives<=0)over()},650);
+ if(S.diff!='s'){const w=S.items[x.tgt].w,r=await lookup(w); // 進階／無限：給課本詞彙注釋當提示
+  if(r&&r.def)$('#msg').innerHTML+='<br>💡 提示：'+esc(r.def.split(w).join('○○'))}
+}
+function good(x,y,r){
+ rbAns(true);S.busy=false;S.ok++;S.done++;cheer(x.c+y.c);
+ [x,y].forEach(t=>{t.done=1;const e=el(t.id);e.classList.remove('on');e.classList.add('ok')});
+ if(S.diff=='s'){S.conn.push([x.id,y.id,S.conn.length]);lines()}
+ const w=x.c+y.c;
+ if(r){S.nx++;if(!S.extra.some(e=>e.w==w))S.extra.push({w,d:r.def});
+  $('#msg').innerHTML='🌟 '+pCall()+'課本外的詞，國語辭典也算對！';$('#learn').hidden=false;$('#learn').innerHTML+='<div>📚 <b>'+w+'</b>：'+esc(r.def)+'</div>'}
+ else{const it=S.items[x.tgt];$('#msg').innerHTML='✅ '+it.w+'（'+it.p+'）';if(S.rm=='wrong'&&WH[it.w]>0){WH[it.w]--;if(!WH[it.w])delete WH[it.w];saveWH()}}
+ hud();
+ const R=S.T.filter(t=>!t.done);
+ if(!R.length)levelDone();
+ else if(S.diff=='u'&&!R.some(p=>R.some(q=>p!=q&&valid(p,q))))levelDone(1);
+}
+/* ---------- 進階／無限：依序點字，詞語長短不一 ---------- */
+const alive=()=>S.items.map((_,i)=>i).filter(i=>!S.tdone[i]&&S.T.filter(t=>t.tgt==i).every(t=>!t.done));
+function updBtns(){const n=S.diff=='u'?S.seq.length:0;$('#ctl').hidden=n<1||!!S.lvDone;$('#sub').hidden=n<2} // 只有選了字才出現；選滿 2 個字才有「送出」
+function pickSeq(t){
+ const i=S.seq.indexOf(t);
+ if(i>=0){if(i==S.seq.length-1){S.seq.pop();el(t.id).classList.remove('on')}updBtns();return}
+ S.seq.push(t);el(t.id).classList.add('on');
+ if(S.seq.length>=2)evalSeq();
+ updBtns();
+}
+function evalSeq(){
+ const ks=S.seq.map(lab),al=alive(),hit=al.filter(i=>pre(ks,keysOf(S.items[i])));
+ if(hit.length){const g=hit.find(i=>keysOf(S.items[i]).length==ks.length);if(g!=null)goodSeq([...S.seq],g);return}
+ if(S.diff=='u'){$('#msg').textContent='🤔 這不是課本答案的開頭；如果你認為它是一個詞，請按「✔ 送出」';return}
+ const rev=al.some(i=>pre([...ks].reverse(),keysOf(S.items[i])));
+ wrongSeq(rev?'⚠️ 順序顛倒囉！要先點前面的字':'❌ 課本中沒有這個詞，再想想看！');
+}
+function goodSeq(seq,g,r){
+ rbAns(true);S.busy=false;S.ok++;S.seq=[];updBtns();
+ seq.forEach(t=>{t.done=1;const e=el(t.id);e.classList.remove('on');e.classList.add('ok')});
+ const w=seq.map(t=>t.c).join('');cheer(w);
+ if(r){S.nx++;if(!S.extra.some(e=>e.w==w))S.extra.push({w,d:r.def});
+  $('#msg').innerHTML='🌟 '+pCall()+'課本外的詞，國語辭典也算對！';$('#learn').hidden=false;$('#learn').innerHTML+='<div>📚 <b>'+w+'</b>：'+esc(r.def)+'</div>'}
+ else{S.done++;S.tdone[g]=1;const it=S.items[g];$('#msg').innerHTML='✅ '+it.w+'（'+it.p+'）';
+  if(S.rm=='wrong'&&WH[it.w]>0){WH[it.w]--;if(!WH[it.w])delete WH[it.w];saveWH()}}
+ hud();
+ if(!alive().length)levelDone(S.items.some((_,i)=>!S.tdone[i])?1:0); // 沒有任何課本詞還能拼 → 自動過關
+}
+async function wrongSeq(m){
+ const seq=[...S.seq];S.seq=[];updBtns();S.bad++;S.lives--;rbAns(false);S.busy=true;sfx('bad');
+ const w=S.items[seq[0].tgt].w;S.miss[w]=(S.miss[w]||0)+1;WH[w]=(WH[w]||0)+1;saveWH();
+ $('#msg').innerHTML=m; // 不顯示玩家自己拼的詞，避免強化錯誤記憶
+ seq.forEach(t=>{const e=el(t.id);e.classList.add('bad');e.classList.remove('on')});hud();
+ setTimeout(()=>{seq.forEach(t=>{const e=el(t.id);e&&e.classList.remove('bad')});S.busy=false;if(S.lives<=0)over()},650);
+ const r=await lookup(w); // 進階／無限：給課本詞彙注釋當提示
+ if(r&&r.def)$('#msg').innerHTML+='<br>💡 提示：'+esc(r.def.split(w).join('○'.repeat(w.length)));
+}
+async function submitU(){ // 無限版：不是課本答案時，查教育部國語辭典
+ if(S.busy||S.lock||S.seq.length<2)return;
+ const seq=[...S.seq],w=seq.map(t=>t.c).join('');S.busy=true;$('#msg').textContent='🔎 查國語辭典中…';
+ const r=await lookup(w);
+ if(r&&r.ok)return goodSeq(seq,-1,r);
+ if(!r){S.busy=false;$('#msg').textContent='📡 連不上國語辭典，這次不算錯，請檢查網路後再試';return}
+ wrongSeq('❌ 課本和國語辭典都查不到這個詞');
+}
+/* ---------- 老師教我：亮出還能選的字＋注釋；每局第一次免費，之後每次扣 1 命 ---------- */
+const FREE_HINTS=1;
+const tchLabel=()=>{$('#tch').textContent='🧑‍🏫 老師教我（'+(S.hints<FREE_HINTS?'本局免費 '+(FREE_HINTS-S.hints)+' 次':'扣 1 命')+'）'};
+async function teach(){
+ if(S.busy||S.lock||S.lvDone||!$('#rit').hidden)return;
+ const al=alive();if(!al.length)return;
+ const cost=S.hints>=FREE_HINTS;
+ if(cost){if(S.lives<=1){$('#msg').textContent='🧑‍🏫 你的命只剩 1 條了，不能再請老師教你囉！';return}
+  if(!confirm('再請老師教你，會扣 1 條命喔！確定嗎？'))return}
+ S.hints++;if(cost){S.lives--;sfx('bad')}hud();tchLabel();
+ const s=S.diff=='s',ks=S.seq.map(lab);let g,k=0;
+ if(s){g=S.sel&&al.includes(S.sel.tgt)?S.sel.tgt:al[Math.random()*al.length|0];if(S.sel&&S.sel.tgt!=g){el(S.sel.id).classList.remove('on');S.sel=null}}
+ else{g=S.seq.length?al.find(i=>pre(ks,keysOf(S.items[i]))):undefined;
+  if(g===undefined){g=al[Math.random()*al.length|0];S.seq.forEach(x=>el(x.id).classList.remove('on'));S.seq=[];updBtns()}else k=S.seq.length}
+ const it=S.items[g],tip=S.T.filter(x=>x.tgt==g&&!x.done&&(s||x.pos==k)),lv=S.lv;
+ tip.forEach(x=>{const e=el(x.id);e.classList.add('tip');setTimeout(()=>e.classList.remove('tip'),4000)});
+ $('#msg').innerHTML='🧑‍🏫 老師說：'+(s?'發光的兩個字可以連在一起！':'發光的字可以先選！')+'這個詞有 '+it.w.length+' 個字。';
+ const r=await lookup(it.w);
+ if(S.lv==lv&&r&&r.def)$('#msg').innerHTML+='<br>💡 '+esc(r.def.split(it.w).join('○'.repeat(it.w.length)));
+}
+$('#tch').onclick=teach;
+$('#sub').onclick=submitU;
+$('#cnl').onclick=()=>{if(S.busy||S.lock)return;S.seq.forEach(t=>el(t.id).classList.remove('on'));S.seq=[];$('#msg').textContent='';updBtns()};
+function lines(){
+ const B=$('#board'),svg=$('#ln');if(!svg)return;const R=B.getBoundingClientRect();
+ svg.innerHTML=S.conn.map(([a,b,i])=>{const r1=el(a).getBoundingClientRect(),r2=el(b).getBoundingClientRect();
+  return `<line x1="${r1.right-R.left}" y1="${r1.top+r1.height/2-R.top}" x2="${r2.left-R.left}" y2="${r2.top+r2.height/2-R.top}" stroke="hsl(${i*67+120},65%,45%)" stroke-width="6" stroke-linecap="round"/>`}).join('');
+}
+addEventListener('resize',lines);
+function levelDone(p){
+ if(S.lvDone)return;S.lvDone=1;updBtns();S.clear++;sfx('level');const gl=S.lives<MAX_LIFE;if(gl)S.lives++;S.items.forEach((x,i)=>{if(S.diff=='s'||S.tdone[i])S.used.add(x.w)});
+ $('#msg').innerHTML+='<br>'+(p?'剩下的字配不出課本的詞，':'')+'🎉 '+pCall()+'過關！'+(gl?'　❤️ 生命 +1':'　（生命已達上限 '+MAX_LIFE+' 條）');
+ $('#done').innerHTML=S.items.map(x=>`<span class="w">${x.w} <small>${x.p}</small></span>`).join('');
+ $('#next').hidden=true;hud();
+ if(gl){const h=$('#hLife');h.classList.remove('gain');void h.offsetWidth;h.classList.add('gain')}
+ const fin=()=>nextLevel(); // 抽完卡（含 BONUS）按「收下」後，自動進入下一關
+ afterLock(()=>ritual(0,()=>{S.clear%BONUS_EVERY==0?ritual(1,fin):fin()})); // 等語音唸完再開始儀式
+ hud();
+}
+function over(){
+ const n=S.ok+S.bad,acc=n?Math.round(S.ok/n*100):0,sec=Math.round((Date.now()-S.t0)/1000),sc=Math.round((S.ok*10+S.nx*5+S.clear*30)*DIFF[S.diff].m);
+ saveRec({id:Date.now(),name:S.name,d:S.diff,k:S.kind,r:rangeLabel(),c:S.clear,ok:S.ok,bad:S.bad,x:S.nx,acc,sec,sc});
+ $('#oTip').textContent=(pName()?pName()+'，':'')+(acc>=90?'太厲害了！幾乎沒有失誤 🌟':acc>=70?'表現不錯，再把錯的詞複習一下 👍':'別灰心，看看下面的詞再挑戰一次 💪');
+ const st=[['玩家',esc(S.name)],['練習範圍',rangeLabel()],['玩法',DIFF[S.diff].n+'・'+(S.kind=='c'?'看國字造詞':'看拼音造詞')],['本局分數',sc+' 分'],['通過關卡',S.clear+' 關'],['題庫輪數',S.round+' 輪（補課／預習加入 '+S.gs.size+' 課）'],['拼對詞語',S.ok+' 個（課外詞 '+S.nx+' 個）'],['按錯次數',S.bad+' 次'],['請老師教我',S.hints+' 次（扣命 '+Math.max(0,S.hints-FREE_HINTS)+' 次）'],['作答正確率',acc+'%'],['遊戲時長',Math.floor(sec/60)+' 分 '+String(sec%60).padStart(2,'0')+' 秒'],['結束時間',new Date().toLocaleString('zh-TW')]];
+ $('#oStat').innerHTML=st.map(([a,b])=>`<div class="stat"><span>${a}</span><b>${b}</b></div>`).join('');
+ const wk=Object.entries(S.miss).sort((a,b)=>b[1]-a[1]);
+ $('#oWeak').innerHTML=wk.length?'<ul class="weak">'+wk.map(([w,c])=>`<li><b>${w}</b> ${(ALL.find(x=>x.w==w)||{}).p||''}　錯 ${c} 次${DC[w]&&DC[w].def?'<br><small>'+esc(DC[w].def)+'</small>':''}</li>`).join('')+'</ul>':'沒有錯的詞，太棒了！';
+ $('#oExtra').parentNode.hidden=!S.extra.length;
+ $('#oExtra').innerHTML=S.extra.map(e=>`<div><b>${e.w}</b>：${esc(e.d)}</div>`).join('');
+ $('#oDraw').innerHTML=S.drawn.length?S.drawn.map(d=>card(MON[d.id-1],d.lv)).join(''):'本局沒有過任何關卡，所以沒有抽到怪物（過 1 關就抽 1 隻！）';
+ show('over');
+}
+/* ---------- 分數紀錄表 ---------- */
+function showRecs(){
+ const D=$('#rfD').value,N=$('#rfN').value.trim();
+ const a=getRecs().filter(r=>(!D||r.d==D)&&(!N||r.name.includes(N))).sort((p,q)=>q.sc-p.sc);
+ $('#rt').innerHTML='<tr>'+['名次','姓名','難度','玩法','範圍','通關','拼對','課外詞','按錯','正確率','時長','分數','日期'].map(h=>`<th>${h}</th>`).join('')+'</tr>'+
+ (a.map((r,i)=>`<tr class="${r.id==S.rid?'me':''}"><td>${i+1}</td><td>${esc(r.name)}</td><td>${DIFF[r.d].n}</td><td>${r.k=='c'?'看國字':'看拼音'}</td><td>${esc(r.r)}</td><td>${r.c}</td><td>${r.ok}</td><td>${r.x}</td><td>${r.bad}</td><td>${r.acc}%</td><td>${fmt(r.sec)}</td><td><b>${r.sc}</b></td><td>${new Date(r.id).toLocaleString('zh-TW')}</td></tr>`).join('')||'<tr><td colspan="13">還沒有紀錄，快去玩一場吧！</td></tr>');
+ show('recs');
+}
+$('#rec').onclick=$('#rec2').onclick=showRecs;$('#rfD').onchange=$('#rfN').oninput=showRecs;
+$('#rBack').onclick=()=>show('home');
+$('#clr').onclick=()=>{if(confirm('確定要清除全部分數紀錄嗎？清除後無法復原。')){try{localStorage.removeItem(RK)}catch(e){}showRecs()}};
+$('#csv').onclick=()=>{const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+ const rows=getRecs().sort((p,q)=>p.id-q.id).map(r=>[new Date(r.id).toLocaleString('zh-TW'),r.name,DIFF[r.d].n,r.k=='c'?'看國字':'看拼音',r.r,r.c,r.ok,r.x,r.bad,r.acc,r.sec,r.sc].map(q).join(','));
+ const u=URL.createObjectURL(new Blob(['\ufeff'+['日期,姓名,難度,玩法,範圍,通關,拼對,課外詞,按錯,正確率,時長(秒),分數'].concat(rows).join('\r\n')],{type:'text/csv'}));
+ const l=document.createElement('a');l.href=u;l.download='生詞遊戲分數紀錄.csv';l.click();URL.revokeObjectURL(u)};
+/* ---------- 怪物圖鑑 ---------- */
+const BONUS_EVERY=5,MAX_LV=10,BOOST_CAP=20,BOOST={E:.15,L:.25,M:.4}; // ← 連過幾關有 BONUS／怪物最高等級／機率加成封頂關數／每多一關各稀有度的機率加成
+const RARE={N:{n:'普通',p:90,c:'#8fa3b8',k:150},E:{n:'菁英',p:9,c:'#3fa7ff',k:20},L:{n:'傳說',p:.7,c:'#ff9f1c',k:1.2},M:{n:'神話',p:.3,c:'#ff3d81',k:1}};
+const MON=[];{let i=0;for(const r in RARE)for(let k=0;k<RARE[r].k;k++){i++;MON.push({id:i,r,name:RARE[r].n+'怪 '+String(i).padStart(3,'0')})}}
+MON.forEach(m=>Object.assign(m,(window.MONSTER_INFO||{})[m.id]||{})); // monsters/monsters.js 可改名稱、稀有度
+const pad=i=>String(i).padStart(3,'0'),dxName=()=>pName()||'無名氏';
+const getDex=()=>{try{return JSON.parse(localStorage.getItem('wg_dex')||'{}')}catch(e){return{}}};
+function odds(bonus){ // 本局連續過關越多，稀有度越高的機率越大；BONUS 禮物保底菁英以上
+ const k=Math.min(S.clear||1,BOOST_CAP)-1,w={};for(const r in RARE)w[r]=RARE[r].p*(1+k*(BOOST[r]||0));
+ if(bonus)w.N=0;const s=Object.values(w).reduce((a,b)=>a+b,0);for(const r in w)w[r]=w[r]/s*100;return w}
+function roll(bonus){
+ const w=odds(bonus),x=Math.random()*100;let a=0,r=bonus?'E':'N';for(const k of['M','L','E','N']){a+=w[k];if(x<a){r=k;break}}
+ const pool=MON.filter(m=>m.r==r),L=pool.length?pool:MON;return{m:L[Math.random()*L.length|0],w};
+}
+function commit(d){
+ const D=getDex(),n=dxName(),mine=D[n]=D[n]||{},old=mine[d.m.id]||0;mine[d.m.id]=Math.min(MAX_LV,old+1);
+ try{localStorage.setItem('wg_dex',JSON.stringify(D))}catch(e){}
+ S.drawn.push({id:d.m.id,lv:mine[d.m.id]});d.old=old;d.lv=mine[d.m.id];return d;
+}
+const drawMonster=bonus=>commit(roll(bonus));
+/* ---------- 召喚儀式：充能 → 選牌 → 揭曉 ---------- */
+const MAX_LIFE=9; // 生命上限（過關 +1 條命）
+const RTXT={N:'普通怪物',E:'✨ 菁英出現！',L:'🌟 傳說降臨！',M:'🌈 神話覺醒！！'},RSAY={E:'菁英！',L:'傳說降臨！',M:'神話覺醒！'};
+function ritual(bonus,done){
+ const o=$('#rit'),NEED=5;let n=0,stage=1;
+ const picks=[];while(picks.length<3){const d=roll(bonus);if(!picks.some(p=>p.m.id==d.m.id))picks.push(d)}
+ o.hidden=false;
+ o.innerHTML=`<div id="fl"></div><div class="rw"><h2>${bonus?'🎊 BONUS 召喚儀式':'🔮 召喚儀式'}</h2><p id="rp">點擊魔法陣 ${NEED} 次，注入能量！</p><div id="circ" class="circ" style="--c:${bonus?'#ffd23f':'#a98bff'}">✨</div><div class="bar" id="bar"><i id="rb"></i></div><div class="rcards" id="rc"></div><div id="rr"></div><button class="mini" id="rs">⏭ 跳過儀式</button></div>`;
+ const rp=$('#rp'),rc=$('#rc');
+ const showCards=()=>{$('#circ').hidden=true;$('#bar').hidden=true;rp.textContent='選一張命運之牌！';rc.innerHTML=picks.map((_,i)=>`<div class="fc" data-i="${i}">🎴</div>`).join('')};
+ const pickCard=(i,fast)=>{
+  if(stage!=2)return;stage=3;$('#rs').hidden=true;
+  [...rc.children].forEach((c,j)=>c.classList.add(j==i?'pick':'dim'));rp.textContent='命運之牌正在回應你……';
+  if(!fast)sfx('drum');
+  setTimeout(()=>{
+   const d=commit(picks[i]),r=d.m.r,mk=h=>{const x=document.createElement('div');x.innerHTML=h;return x.firstChild};
+   [...rc.children].forEach((c,j)=>c.replaceWith(j==i?mk(card(d.m,d.lv)):mk(card(picks[j].m,1).replace(/<span class="lv">.*?<\/span>/,'').replace('class="mc ','class="mc dim '))));
+   rc.children[i].classList.add('big');rp.textContent=picks.length?'這就是你抽到的怪物！（灰色的是沒選到的牌）':'';
+   const fl=$('#fl');fl.style.background=RARE[r].c;fl.classList.remove('on');void fl.offsetWidth;fl.classList.add('on');
+   if(r=='M'){o.classList.add('shk');setTimeout(()=>o.classList.remove('shk'),700)}
+   sfx(r);if(RSAY[r])say(RSAY[r]);
+   $('#rr').innerHTML=`<h2 style="color:${RARE[r].c}">${RTXT[r]}</h2><div><b>${d.old?'⬆️ 重複抽到！Lv.'+d.old+' → Lv.'+d.lv+(d.lv>=MAX_LV?'（滿級）':''):'✨ NEW！解鎖新圖鑑'}</b></div><div><small>這次機率：${['N','E','L','M'].map(k=>RARE[k].n+d.w[k].toFixed(1)+'%').join('　')}</small></div><button class="btn" id="rok" style="margin-top:10px">收下 →</button>`;
+   $('#rok').onclick=()=>{o.hidden=true;o.innerHTML='';done(d)};
+  },fast?0:1400);
+ };
+ $('#circ').onclick=()=>{if(stage!=1)return;n++;sfx('charge',n);$('#rb').style.width=n/NEED*100+'%';
+  const c=$('#circ');c.classList.add('tap');setTimeout(()=>c.classList.remove('tap'),120);
+  if(n>=NEED){stage=2;setTimeout(()=>{showCards();sfx('charge',8)},350)}};
+ rc.onclick=e=>{const c=e.target.closest('.fc');if(c)pickCard(+c.dataset.i)};
+ $('#rs').onclick=()=>{if(stage==1){stage=2;showCards()}pickCard(Math.random()*3|0,1)};
+}
+const drawHTML=(d,title)=>`<h3>${title}</h3>`+card(d.m,d.lv)+`<div><b>${d.old?'⬆️ 重複抽到！Lv.'+d.old+' → Lv.'+d.lv+(d.lv>=MAX_LV?'（滿級）':''):'✨ NEW！解鎖新圖鑑'}</b></div><div><small>這次機率：${['N','E','L','M'].map(k=>RARE[k].n+d.w[k].toFixed(1)+'%').join('　')}</small></div>`;
+const card=(m,lv)=>`<div class="mc ${m.r}${lv?'':' lk'}" style="--rc:${RARE[m.r].c}">${lv?`<span class="lv">Lv.${lv}</span>`:''}<div class="im">${lv?`<img src="monsters/${pad(m.id)}.png" data-i="0" onerror="imgFb(this)" loading="lazy" alt="">`:'❓'}</div><div><span class="bdg">${RARE[m.r].n}</span> #${pad(m.id)}</div><b>${lv?esc(m.name):'？？？'}</b></div>`;
+function imgFb(e){const x=['webp','jpg','gif'],i=+e.dataset.i;if(i<x.length){e.dataset.i=i+1;e.src=e.src.replace(/\.\w+$/,'.'+x[i])}else{const s=document.createElement('span');s.textContent='👾';e.replaceWith(s)}}
+function showDex(){
+ const f=$('#dxF').value,mine=getDex()[dxName()]||{};
+ $('#dxSub').textContent=dxName()+' 的圖鑑｜基本機率：'+Object.values(RARE).map(r=>r.n+r.p+'%').join('、')+'｜每過 1 關抽 1 隻，連過 '+BONUS_EVERY+' 關有 BONUS；一次過越多關，稀有機率越高；重複抽到升級（最高 Lv.'+MAX_LV+'）';
+ $('#dxCnt').textContent='已收集 '+Object.keys(mine).length+' / '+MON.length;
+ $('#dxg').innerHTML=MON.filter(m=>!f||(f=='got'?mine[m.id]:m.r==f)).map(m=>card(m,mine[m.id]||0)).join('');show('dex');
+}
+$('#dxb').onclick=$('#dx2').onclick=showDex;$('#dxF').onchange=showDex;$('#dxBack').onclick=()=>show('home');
+/* ---------- 聲音：背景音樂、音效、語音 ---------- */
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:+v}catch(e){return d}};
+const SND={bgm:lsGet('wg_bgm',1),sfx:lsGet('wg_sfx',1)};
+let ctx,bgmT=null,bgmG,nextT=0,ni=0,VOICE=null;
+const TTS='speechSynthesis' in window;
+function ac(){if(!ctx){ctx=new(window.AudioContext||window.webkitAudioContext)();bgmG=ctx.createGain();bgmG.connect(ctx.destination)}if(ctx.state=='suspended')ctx.resume();return ctx}
+function tone(f,t,d,type,v,dest){const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(dest||c.destination);o.start(t);o.stop(t+d+.05)}
+const MEL=[0,2,4,7,9,7,4,2,4,7,9,12,9,7,4,2,5,9,12,9,5,9,7,4,2,4,7,4,2,0,4,0],hz=n=>261.63*2**(n/12);
+function bgmTick(){const c=ac();if(nextT<c.currentTime)nextT=c.currentTime+.05;
+ while(nextT<c.currentTime+.8){const n=MEL[ni%MEL.length];tone(hz(n),nextT,.28,'triangle',.05,bgmG);if(ni%8==0)tone(hz([0,5,7,5][(ni>>3)&3]-12),nextT,1.2,'sine',.06,bgmG);nextT+=.3;ni++}}
+function bgmOn(){if(!SND.bgm||bgmT)return;try{ac();bgmG.gain.value=1;bgmT=setInterval(bgmTick,200);bgmTick()}catch(e){}}
+function bgmOff(){if(bgmT){clearInterval(bgmT);bgmT=null}if(bgmG)bgmG.gain.value=0}
+function sfx(k,n){if(!SND.sfx)return;try{const c=ac(),t=c.currentTime;
+ if(k=='ok')[1046,1318,1568].forEach((f,i)=>tone(f,t+i*.08,.25,'sine',.12));
+ else if(k=='bad'){tone(160,t,.3,'sawtooth',.1);tone(120,t+.12,.3,'sawtooth',.1)}
+ else if(k=='level')[523,659,784,1046,1318].forEach((f,i)=>tone(f,t+i*.1,.35,'triangle',.12));
+ else if(k=='charge')tone(300+n*110,t,.3,'sine',.14);
+ else if(k=='drum'){for(let i=0;i<12;i++)tone(80+i*7,t+i*.1,.14,'square',.07)}
+ else if(k=='N')[523,659].forEach((f,i)=>tone(f,t+i*.1,.4,'sine',.12));
+ else if(k=='E')[523,659,784,1046].forEach((f,i)=>tone(f,t+i*.09,.45,'triangle',.13));
+ else if(k=='L')[523,659,784,1046,1318,1568].forEach((f,i)=>tone(f,t+i*.09,.6,'triangle',.14));
+ else if(k=='M'){[392,523,659,784,1046,1318,1568,2093].forEach((f,i)=>tone(f,t+i*.08,.9,'triangle',.15));[196,262,330].forEach(f=>tone(f,t+.6,1.5,'sine',.12))}}catch(e){}}
+function pickVoice(){const v=speechSynthesis.getVoices();VOICE=v.find(x=>/zh[-_]TW|cmn[-_]Hant/i.test(x.lang))||v.find(x=>/^(zh|cmn)/i.test(x.lang))||null}
+if(TTS){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(txt){if(!TTS||!SND.sfx)return;setTimeout(()=>{const u=new SpeechSynthesisUtterance(txt);u.lang=VOICE?VOICE.lang:'zh-TW';if(VOICE)u.voice=VOICE;u.rate=.85;u.pitch=1.1;speechSynthesis.speak(u)},40)}
+function speakChar(c){if(TTS&&SND.sfx)speechSynthesis.cancel();say(c)}
+function flashOK(){const b=$('#okb');b.classList.remove('show');void b.offsetWidth;b.classList.add('show')}
+function sayP(txt){return new Promise(res=>{if(!TTS||!SND.sfx||!VOICE)return res();let d=0;const fin=()=>{if(!d){d=1;res()}};
+ setTimeout(()=>{const u=new SpeechSynthesisUtterance(txt);u.lang=VOICE.lang;u.voice=VOICE;u.rate=.85;u.pitch=1.1;u.onend=u.onerror=fin;speechSynthesis.speak(u)},40);
+ setTimeout(fin,2500+txt.length*500)})} // 保險：萬一沒收到「唸完」訊號，最多等這麼久
+const afterLock=f=>{const w=()=>S.lock?setTimeout(w,100):setTimeout(f,400);w()};
+async function cheer(w){sfx('ok');flashOK();S.lock=1;$('#board').classList.add('lk');$('#lkt').hidden=false;
+ if(TTS&&SND.sfx)speechSynthesis.cancel();await sayP(w);
+ S.lock=0;$('#board').classList.remove('lk');$('#lkt').hidden=true} // 強制聽完整個詞語音，才能選下一個詞 // 答對：叮咚→再唸一次詞語→你好棒，同時畫面顯示「答對了」
+function tgLabel(){$$('.tg').forEach(b=>{const k=b.dataset.t;b.textContent=(k=='bgm'?'🎵 背景音樂 ':'🔊 語音音效 ')+(SND[k]?'開':'關');b.classList.toggle('sel',!!SND[k])})}
+document.addEventListener('click',e=>{const b=e.target.closest('.tg');if(!b)return;const k=b.dataset.t;SND[k]=SND[k]?0:1;try{localStorage.setItem('wg_'+k,SND[k])}catch(x){}
+ tgLabel();if(k=='bgm')(SND.bgm&&$('#game').classList.contains('on'))?bgmOn():bgmOff();if(k=='sfx'&&!SND.sfx&&TTS)speechSynthesis.cancel()});
+$('#tTest').onclick=()=>{ac();if(TTS)speechSynthesis.cancel();sfx('ok');say((pName()?pName()+'，':'')+'你好棒')};
+tgLabel();
+/* ===== 休息小遊戲（relax-break）=====
+   觸發：每答 10 題，或連續答對 5 題（先到先觸發）→ 在「關卡／波次之間」隨機出一款小遊戲，一局決勝負，贏了得寶箱／關卡獎勵。
+   年級：用「練習範圍的最高冊數」換算，2 冊 1 個年級（1-2 冊＝1 年級 … 11-12 冊＝6 年級）。
+   解鎖：「同一款」小遊戲累積贏電腦 3 次，這一款就能在首頁「🎮 遊戲區」直接玩（不看冊數）；遊戲區每一款每天各玩 2 回。
+   電腦強度：依該款的勝場數與勝率慢慢調高，一律從最簡單開始。進度存在這台電腦的瀏覽器裡。 */
+const RB_ALL={whack:null,downstairs:null,memory:null,catmouse:null,reversi:null,snake:null,upstairs:null,gomoku9:null,checkers:null,
+  banqi:null,hexxagon:['small37','random37','classic','square7'],pickupred:null,oldmaid:null,sevens:null,xiangqi:null,minesweeper:null,go9:null};
+const RB_PICK=(...ids)=>Object.fromEntries(ids.map(k=>[k,RB_ALL[k]]));
+const RB_GRADE_GAMES={
+ 1:RB_PICK('whack','downstairs','memory','catmouse'),
+ 2:RB_PICK('reversi','snake','upstairs','memory'),
+ 3:RB_PICK('gomoku9','reversi','checkers','memory'),
+ 4:RB_PICK('gomoku9','banqi','hexxagon','pickupred','oldmaid','sevens'),
+ 5:RB_PICK('gomoku9','xiangqi','banqi','pickupred','sevens','minesweeper'),
+ 6:RB_PICK(...Object.keys(RB_ALL))};   // 6 年級：各年級小遊戲＋圍棋
+const rbGradeOf=vol=>Math.max(1,Math.min(6,Math.ceil((+vol||1)/2)));
+
+const RB_X={bgm:false,cont:null};
+RelaxBreak.init({every:10,streak:5,level:'easy',unlockWins:3,dailyLimit:2,storageKey:'hy_relax_v1',deferred:true,
+ rewardLabels:{chest:'寶箱（多抽 1 隻怪物）',stage:'關卡獎勵（生命 +1）'},
+ rewards:{
+  chest:()=>'🔮 回去之後馬上多抽 1 隻怪物！',
+  stage:()=>S.lives<MAX_LIFE?'❤️ 生命 +1':'❤️ 生命已滿，改發一次 BONUS 抽卡（菁英以上）'},
+ onStart:()=>{RB_X.bgm=!!bgmT;bgmOff();try{speechSynthesis.cancel()}catch(e){}},
+ onEnd:info=>{if(RB_X.bgm)bgmOn();const c=RB_X.cont;RB_X.cont=null;
+  if(info.zone||!c)return;
+  if(info.result==='win'){
+   if(info.rewardType==='chest'){ritual(0,c);return}
+   if(S.lives<MAX_LIFE){S.lives++;hud()}else{ritual(1,c);return}}
+  c()}});
+function rbAns(ok){try{RelaxBreak.answered(!!ok)}catch(e){}}
+function rbVol(){let m=0;
+ if(S.rm=='single')m=S.book;else if(S.rm=='combined')m=Math.max(0,...S.bks);else m=Math.max(0,...ALL.filter(x=>WH[x.w]>0).map(x=>x.bi));
+ (S.gs||new Set()).forEach(k=>{m=Math.max(m,+k.split(':')[0])});return m+1}
+function rbHold(cont){ // 關卡之間才彈出小遊戲，不會打斷作答
+ if(!window.RelaxBreak||RelaxBreak.active)return false;
+ RelaxBreak.configure({games:RB_GRADE_GAMES[rbGradeOf(rbVol())]});RB_X.cont=cont;
+ if(RelaxBreak.poll())return true;RB_X.cont=null;return false}
+function growScope(){ // 先往前補課（直到第1冊第1課），補完再往後預習（直到最後一課）
+ const all=[];BOOKS.forEach((b,bi)=>b.L.forEach((l,li)=>all.push([bi,li])));
+ const inS=([bi,li])=>S.rm=='single'?((bi==S.book&&S.ls.has(li))||S.gs.has(bi+':'+li)):(S.bks.has(bi)||S.gs.has(bi+':'+li));
+ const ids=all.map((x,i)=>inS(x)?i:-1).filter(i=>i>=0);if(!ids.length)return'';
+ const lo=Math.min(...ids),hi=Math.max(...ids);let a,k;
+ if(lo>0){a=all[lo-1];k='📚 補課：加入'}else if(hi<all.length-1){a=all[hi+1];k='🔭 預習：加入'}else return'🏁 已涵蓋全部課文';
+ S.gs.add(a[0]+':'+a[1]);return k+BOOKS[a[0]].n+' 第'+(+BOOKS[a[0]].L[a[1]].n)+'課'}
+function rbZone(){RelaxBreak.configure({games:RB_GRADE_GAMES[6]});RelaxBreak.openZone()}
+$('#zoneb').onclick=rbZone;
+setTimeout(()=>{if(!TTS||!VOICE)$('#vn').textContent='⚠️ 這台電腦找不到中文語音，點字時不會發音（音樂和音效仍可使用）。Windows 可到「設定 → 時間與語言 → 語音」新增「中文（台灣）」語音，再重開瀏覽器。'},1500);
+// 1. 禁用滑鼠右鍵選單
+document.addEventListener('contextmenu', event => event.preventDefault());
+
+// 2. 禁用 Ctrl+S / Cmd+S 另存網頁快捷鍵
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        alert('本網站已啟用內容保護，暫不開放另存網頁。');
+    }
+    // 順便禁用 Ctrl+U (查看原始碼) 和 F12 (開發者工具)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'u' || e.key === 'F12') {
+        e.preventDefault();
+    }
+});
+</script></body></html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<script src="../gate-nav.js" data-pos="tl" data-name="聽課文" data-home="0" data-confirm="0"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>聽課文・語文天地｜華文課本泰國版</title>
+<style>
+:root{
+  --bg:#fff7e8; --card:#ffffff; --ink:#3b2f2a; --sub:#8a7a70;
+  --main:#ff8a3d; --main-d:#e8692a; --teal:#1fa6a0; --teal-l:#d9f3f1;
+  --line:#f1e2cc; --done:#43b36a; --shadow:0 4px 14px rgba(120,80,30,.12);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+  line-height:1.5;padding-bottom:230px;
+}
+header{
+  background:linear-gradient(135deg,var(--main),#ffb25e);color:#fff;
+  padding:22px 16px 18px;text-align:center;
+}
+header h1{margin:0;font-size:26px;letter-spacing:2px}
+header p{margin:6px 0 0;font-size:15px;opacity:.95}
+main{max-width:920px;margin:0 auto;padding:16px}
+h2{font-size:18px;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+h2 .step{background:var(--teal);color:#fff;border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+
+/* 冊別 */
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.book{
+  background:var(--card);border:2px solid var(--line);border-radius:14px;padding:10px 8px;
+  text-align:center;cursor:pointer;font:inherit;color:inherit;box-shadow:var(--shadow);
+}
+.book .no{font-size:13px;color:var(--sub)}
+.book .nm{font-size:17px;font-weight:700;margin:2px 0}
+.book .pg{font-size:12px;color:var(--sub)}
+.book.on{border-color:var(--main);background:#fff1e0}
+.book.on .nm{color:var(--main-d)}
+
+/* 課別 */
+.lessons{display:flex;flex-direction:column;gap:8px}
+.lesson{
+  background:var(--card);border-radius:14px;padding:10px 12px;box-shadow:var(--shadow);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:2px solid transparent;
+}
+.lesson .num{
+  background:var(--teal-l);color:var(--teal);font-weight:800;border-radius:10px;
+  min-width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.lesson .ttl{flex:1 1 150px;font-size:17px;font-weight:700}
+.lesson .btns{display:flex;gap:8px;flex-wrap:wrap}
+.tbtn{
+  font:inherit;font-size:15px;border:2px solid var(--line);background:#fffaf2;color:var(--ink);
+  border-radius:999px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+}
+.tbtn small{color:var(--sub);font-size:12px}
+.tbtn:hover{border-color:var(--main)}
+.tbtn.playing{background:var(--main);border-color:var(--main);color:#fff}
+.tbtn.playing small{color:#fff}
+.tbtn.done::after{content:"✓";color:var(--done);font-weight:900}
+.tbtn.playing.done::after{color:#fff}
+
+/* 播放器 */
+#player{
+  position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:3px solid var(--main);
+  box-shadow:0 -6px 20px rgba(0,0,0,.12);padding:10px 14px calc(12px + env(safe-area-inset-bottom));z-index:10;
+}
+.pin{max-width:920px;margin:0 auto}
+#nowTitle{font-weight:800;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#nowSub{font-size:12px;color:var(--sub)}
+.seekrow{display:flex;align-items:center;gap:8px;margin:6px 0}
+.seekrow span{font-size:13px;color:var(--sub);min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+.seekwrap{position:relative;flex:1;height:28px}
+.seekwrap .ab{position:absolute;top:10px;height:8px;background:rgba(31,166,160,.35);border-radius:4px;pointer-events:none}
+#seek{position:absolute;inset:0;width:100%;margin:0;background:none;accent-color:var(--main);height:28px}
+.ctrl{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.cbtn{
+  font:inherit;border:none;background:var(--teal-l);color:var(--teal);border-radius:999px;
+  min-width:44px;height:44px;padding:0 12px;font-size:16px;font-weight:700;cursor:pointer;
+}
+.cbtn:disabled{opacity:.4;cursor:default}
+.cbtn.big{background:var(--main);color:#fff;width:60px;height:60px;font-size:26px;box-shadow:var(--shadow)}
+.cbtn.on{background:var(--teal);color:#fff}
+.opts{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.opts .lab{font-size:12px;color:var(--sub);margin-left:6px}
+.sbtn{
+  font:inherit;font-size:13px;border:2px solid var(--line);background:#fff;border-radius:999px;
+  padding:4px 10px;cursor:pointer;color:var(--ink);
+}
+.sbtn.on{background:var(--main);border-color:var(--main);color:#fff}
+#msg{text-align:center;font-size:13px;color:#c0392b;min-height:0}
+.tip{background:var(--teal-l);border-radius:12px;padding:10px 12px;font-size:14px;color:#17635f;margin-top:14px}
+@media(max-width:480px){
+  body{padding-bottom:260px}
+  header h1{font-size:22px}
+  .cbtn{min-width:40px;height:40px;padding:0 8px}
+  .cbtn.big{width:54px;height:54px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎧 聽課文・語文天地</h1>
+  <p>華文課本（泰國版）第 1～12 冊　在家也能跟著老師唸</p>
+  <p id="hello" style="font-weight:700;font-size:17px"></p>
+</header>
+
+<main>
+  <h2><span class="step">1</span>選一冊</h2>
+  <div class="books" id="books"></div>
+
+  <h2><span class="step">2</span>選一課，按下想聽的音檔</h2>
+  <div class="lessons" id="lessons"></div>
+
+  <div class="tip">
+    💡 <b>小撇步：</b>聽不清楚就按「🐢 慢慢聽」；想反覆練習某一句，先按「📍A 從這裡」，播到結尾按「🏁B 到這裡」，就會一直重複這一段喔！
+  </div>
+</main>
+
+<div id="player">
+  <div class="pin">
+    <div id="nowTitle">請先選一課來聽</div>
+    <div id="nowSub">—</div>
+    <div class="seekrow">
+      <span id="tCur">0:00</span>
+      <div class="seekwrap">
+        <div class="ab" id="abBar" style="display:none"></div>
+        <input type="range" id="seek" min="0" max="100" step="0.1" value="0" aria-label="播放進度">
+      </div>
+      <span id="tDur">0:00</span>
+    </div>
+    <div class="ctrl">
+      <button class="cbtn" id="prev" aria-label="上一個">⏮</button>
+      <button class="cbtn" id="back5" aria-label="倒退5秒">↺5</button>
+      <button class="cbtn big" id="play" aria-label="播放">▶</button>
+      <button class="cbtn" id="fwd5" aria-label="快轉5秒">5↻</button>
+      <button class="cbtn" id="next" aria-label="下一個">⏭</button>
+    </div>
+    <div class="opts">
+      <span class="lab">速度</span>
+      <button class="sbtn" data-rate="0.75">🐢 慢慢聽</button>
+      <button class="sbtn on" data-rate="1">正常</button>
+      <button class="sbtn" data-rate="1.25">🐇 快一點</button>
+      <span class="lab">播完後</span>
+      <button class="sbtn" id="modeBtn">⏹ 播完就停</button>
+      <span class="lab">重複</span>
+      <button class="sbtn" id="aBtn">📍A 從這裡</button>
+      <button class="sbtn" id="bBtn">🏁B 到這裡</button>
+      <button class="sbtn" id="abClear">清除</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<script src="audio-data.js"></script>
+<script>
+(function(){
+  var D = window.AUDIO_DATA || [];
+  var KEY = 'huawen-audio-done-v1';
+  var done = {};
+  try { done = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e){ done = {}; }
+  function saveDone(){ try{ localStorage.setItem(KEY, JSON.stringify(done)); }catch(e){} }
+  function lastBook(){ try{ var v = parseInt(localStorage.getItem('huawen-audio-lastbook'),10); return (v>=0 && v<D.length)? v : 0; }catch(e){ return 0; } }
+  function saveLastBook(i){ try{ localStorage.setItem('huawen-audio-lastbook', String(i)); }catch(e){} }
+
+  var $ = function(id){ return document.getElementById(id); };
+  var pn = (window.HY_PLAYER && HY_PLAYER.get()) || '';
+  if(pn) $('hello').textContent = '👋 ' + pn + '，今天想聽哪一課呢？';
+  var audio = new Audio(); audio.preload = 'none';
+  var view = lastBook();          // 目前瀏覽的冊
+  var play = {b:-1, t:-1};        // 目前播放：冊、曲目索引
+  var tracks = [];                // 目前播放那一冊的曲目清單
+  var rate = 1, mode = 0;         // mode 0=播完就停 1=重複這一首 2=連續播放
+  var MODES = ['⏹ 播完就停','🔂 重複這一首','▶️ 連續播放整冊'];
+  var A = null, B = null, dragging = false;
+
+  function fmt(s){ s = Math.max(0, Math.round(s||0)); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+  function key(b, n, k){ return 'b'+b+'L'+n+k; }
+  function kindName(k){ return k==='t' ? '📖 課文' : '🗣 語文天地'; }
+
+  function buildTracks(bi){
+    var out = [];
+    D[bi].lessons.forEach(function(L, li){
+      out.push({li:li, k:'t', src:L.t.src, dur:L.t.dur});
+      out.push({li:li, k:'g', src:L.g.src, dur:L.g.dur});
+    });
+    return out;
+  }
+
+  /* ---------- 畫面 ---------- */
+  function renderBooks(){
+    var h = '';
+    D.forEach(function(bk, i){
+      var total = bk.lessons.length*2, got = 0;
+      bk.lessons.forEach(function(L){ ['t','g'].forEach(function(k){ if(done[key(bk.b, L.n, k)]) got++; }); });
+      h += '<button class="book'+(i===view?' on':'')+'" data-i="'+i+'">'+
+           '<div class="no">第 '+bk.b+' 冊</div><div class="nm">'+bk.name+'</div>'+
+           '<div class="pg">已聽 '+got+' / '+total+'</div></button>';
+    });
+    $('books').innerHTML = h;
+  }
+  function renderLessons(){
+    var bk = D[view], h = '';
+    bk.lessons.forEach(function(L, li){
+      function btn(k, o){
+        var isPlay = (play.b===view && play.t>=0 && tracks[play.t] && tracks[play.t].li===li && tracks[play.t].k===k);
+        var cls = 'tbtn'+(isPlay?' playing':'')+(done[key(bk.b,L.n,k)]?' done':'');
+        return '<button class="'+cls+'" data-li="'+li+'" data-k="'+k+'">'+kindName(k)+' <small>'+fmt(o.dur)+'</small></button>';
+      }
+      h += '<div class="lesson"><div class="num">'+L.n+'</div><div class="ttl">'+L.title+'</div>'+
+           '<div class="btns">'+btn('t',L.t)+btn('g',L.g)+'</div></div>';
+    });
+    $('lessons').innerHTML = h;
+  }
+
+  /* ---------- 播放 ---------- */
+  function setMsg(t){ $('msg').textContent = t||''; }
+  function clearAB(){ A = B = null; $('aBtn').classList.remove('on'); $('bBtn').classList.remove('on'); drawAB(); }
+  function drawAB(){
+    var bar = $('abBar'), d = audio.duration;
+    if(A!==null && d>0){
+      var e = (B!==null? B : A+0.3);
+      bar.style.display='block';
+      bar.style.left = (A/d*100)+'%';
+      bar.style.width = Math.max(0.8,(e-A)/d*100)+'%';
+    } else bar.style.display='none';
+  }
+  function loadTrack(bi, ti, autoplay){
+    if(play.b !== bi){ tracks = buildTracks(bi); }
+    play.b = bi; play.t = ti;
+    var tr = tracks[ti], L = D[bi].lessons[tr.li];
+    clearAB(); setMsg('');
+    audio.src = tr.src;
+    audio.playbackRate = rate;
+    $('nowTitle').textContent = '第'+L.n+'課　'+L.title;
+    $('nowSub').textContent = D[bi].name+'（第'+D[bi].b+'冊）・'+kindName(tr.k);
+    $('tDur').textContent = fmt(tr.dur);
+    $('tCur').textContent = '0:00';
+    $('seek').max = tr.dur; $('seek').value = 0;
+    $('prev').disabled = (ti===0);
+    $('next').disabled = (ti===tracks.length-1);
+    if(autoplay){ var p = audio.play(); if(p && p.catch) p.catch(function(){}); }
+    if('mediaSession' in navigator){
+      try{ navigator.mediaSession.metadata = new MediaMetadata({title:'第'+L.n+'課 '+L.title+'・'+kindName(tr.k).replace(/^\S+\s/,''), artist:'華文課本（泰國版）', album:D[bi].name}); }catch(e){}
+    }
+    renderLessons();
+  }
+  function togglePlay(){
+    if(play.t<0){ loadTrack(view, 0, true); return; }
+    if(audio.paused){ var p = audio.play(); if(p&&p.catch) p.catch(function(){}); } else audio.pause();
+  }
+  function step(d){
+    if(play.t<0) return;
+    var n = play.t + d;
+    if(n<0 || n>=tracks.length) return;
+    loadTrack(play.b, n, true);
+  }
+
+  audio.addEventListener('play', function(){ $('play').textContent='⏸'; $('play').setAttribute('aria-label','暫停'); });
+  audio.addEventListener('pause', function(){ $('play').textContent='▶'; $('play').setAttribute('aria-label','播放'); });
+  audio.addEventListener('loadedmetadata', function(){ $('seek').max = audio.duration; $('tDur').textContent = fmt(audio.duration); audio.playbackRate = rate; });
+  audio.addEventListener('timeupdate', function(){
+    var t = audio.currentTime;
+    if(B!==null && A!==null && t >= B){ audio.currentTime = A; return; }
+    if(!dragging){ $('seek').value = t; }
+    $('tCur').textContent = fmt(t);
+    var d = audio.duration;
+    if(d>0 && t/d >= 0.9 && play.t>=0){
+      var tr = tracks[play.t], k = key(D[play.b].b, D[play.b].lessons[tr.li].n, tr.k);
+      if(!done[k]){ done[k] = 1; saveDone(); renderBooks(); renderLessons(); }
+    }
+  });
+  audio.addEventListener('ended', function(){
+    if(mode===1){ audio.currentTime = 0; audio.play(); }
+    else if(mode===2 && play.t < tracks.length-1){ loadTrack(play.b, play.t+1, true); }
+  });
+  audio.addEventListener('error', function(){
+    if(audio.getAttribute('src')) setMsg('找不到音檔，請確認 audio 資料夾和 index.html 放在同一個地方喔。');
+  });
+
+  /* ---------- 事件 ---------- */
+  $('books').addEventListener('click', function(e){
+    var b = e.target.closest('.book'); if(!b) return;
+    view = +b.dataset.i; saveLastBook(view); renderBooks(); renderLessons();
+    window.scrollTo({top: $('lessons').offsetTop - 80, behavior:'smooth'});
+  });
+  $('lessons').addEventListener('click', function(e){
+    var b = e.target.closest('.tbtn'); if(!b) return;
+    var li = +b.dataset.li, k = b.dataset.k;
+    if(play.b !== view) tracks = buildTracks(view);
+    var ti = li*2 + (k==='g'?1:0);
+    if(play.b===view && play.t===ti){ togglePlay(); renderLessons(); return; }
+    loadTrack(view, ti, true);
+  });
+  $('play').onclick = togglePlay;
+  $('prev').onclick = function(){ step(-1); };
+  $('next').onclick = function(){ step(1); };
+  $('back5').onclick = function(){ if(play.t>=0) audio.currentTime = Math.max(0, audio.currentTime-5); };
+  $('fwd5').onclick = function(){ if(play.t>=0) audio.currentTime = Math.min(audio.duration||1e9, audio.currentTime+5); };
+  var seek = $('seek');
+  seek.addEventListener('input', function(){ dragging = true; $('tCur').textContent = fmt(+seek.value); });
+  seek.addEventListener('change', function(){ if(play.t>=0) audio.currentTime = +seek.value; dragging = false; });
+  document.querySelectorAll('.sbtn[data-rate]').forEach(function(b){
+    b.onclick = function(){
+      rate = +b.dataset.rate; audio.playbackRate = rate;
+      document.querySelectorAll('.sbtn[data-rate]').forEach(function(x){ x.classList.toggle('on', x===b); });
+    };
+  });
+  $('modeBtn').onclick = function(){ mode = (mode+1)%3; $('modeBtn').textContent = MODES[mode]; $('modeBtn').classList.toggle('on', mode>0); };
+  $('aBtn').onclick = function(){
+    if(play.t<0){ setMsg('先選一個音檔來播放喔！'); return; }
+    A = audio.currentTime; if(B!==null && B<=A) B = null;
+    $('aBtn').classList.add('on'); $('bBtn').classList.toggle('on', B!==null);
+    setMsg('已設定 A 點 '+fmt(A)+'，播到想結束的地方，按「🏁B 到這裡」'); drawAB();
+  };
+  $('bBtn').onclick = function(){
+    if(play.t<0){ setMsg('先選一個音檔來播放喔！'); return; }
+    if(A===null){ setMsg('請先按「📍A 從這裡」'); return; }
+    if(audio.currentTime <= A+0.5){ setMsg('B 點要比 A 點晚一點喔'); return; }
+    B = audio.currentTime; $('bBtn').classList.add('on');
+    audio.currentTime = A; if(audio.paused) audio.play();
+    setMsg('開始重複播放這一段！按「清除」可以取消'); drawAB();
+  };
+  $('abClear').onclick = function(){ clearAB(); setMsg(''); };
+  document.addEventListener('keydown', function(e){
+    if(e.target.tagName==='INPUT' && e.target.type!=='range') return;
+    if(e.code==='Space'){ e.preventDefault(); togglePlay(); }
+    else if(e.code==='ArrowLeft'){ $('back5').click(); }
+    else if(e.code==='ArrowRight'){ $('fwd5').click(); }
+  });
+  if('mediaSession' in navigator){
+    try{
+      navigator.mediaSession.setActionHandler('play', function(){ audio.play(); });
+      navigator.mediaSession.setActionHandler('pause', function(){ audio.pause(); });
+      navigator.mediaSession.setActionHandler('previoustrack', function(){ step(-1); });
+      navigator.mediaSession.setActionHandler('nexttrack', function(){ step(1); });
+    }catch(e){}
+  }
+
+  if(!D.length){ $('lessons').innerHTML = '<p>找不到 audio-data.js，請確認檔案放在 index.html 旁邊。</p>'; return; }
+  renderBooks(); renderLessons();
+})();
+</script>
+</body>
+</html>
