@@ -1,0 +1,8 @@
+﻿# 暫存與系統快取
+*.tmp
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+.vercel
+*.env
